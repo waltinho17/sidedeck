@@ -1,0 +1,527 @@
+<!doctype html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="fonts.css" />
+    <link rel="stylesheet" href="styles.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SideDeck</title>
+    <script type="module" src="/main.js" defer></script>
+  </head>
+
+  <body>
+    <svg width="0" height="0" style="position:absolute">
+      <defs>
+        <linearGradient id="accentGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color: var(--accent-2)" />
+          <stop offset="100%" style="stop-color: var(--accent)" />
+        </linearGradient>
+      </defs>
+    </svg>
+
+    <video id="screensaver" class="screensaver" muted loop playsinline></video>
+
+    <!-- Discreet temperatures shown on top of the screensaver video. -->
+    <div class="ss-temps" id="ss-temps" data-corner="bottom-right" hidden>
+      <div class="ss-temp ss-temp-cpu"><span>CPU</span><b id="ss-cpu-temp">--°</b></div>
+      <div class="ss-temp ss-temp-gpu"><span>GPU</span><b id="ss-gpu-temp">--°</b></div>
+    </div>
+
+    <!-- Shown while no data arrives (PC off, asleep or unplugged). -->
+    <div class="host-away-screen" aria-hidden="true">
+      <div class="host-away-text">Aguardando o PC</div>
+    </div>
+
+    <header class="topbar" id="topbar" data-clock="center">
+      <div class="brand" id="brand-text">SideDeck</div>
+      <div class="clock" id="clock">--:--</div>
+      <div class="topbar-right">
+        <div class="fps" id="fps" hidden>
+          <span class="fps-value" id="fps-value">--</span><span class="fps-unit">FPS</span>
+        </div>
+        <div class="corner-logo" id="corner-logo" aria-hidden="true" hidden>
+          <!-- Same drawing as branding/sidedeck-icon.svg (the app icon). -->
+          <svg viewBox="0 0 1024 1024">
+            <defs>
+              <linearGradient id="cornerLogoBg" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#1b1b21"/>
+                <stop offset="1" stop-color="#0b0b0e"/>
+              </linearGradient>
+              <linearGradient id="cornerLogoPulse" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0" stop-color="#ffb020"/>
+                <stop offset="1" stop-color="#ff5a1a"/>
+              </linearGradient>
+            </defs>
+            <rect width="1024" height="1024" rx="228" fill="url(#cornerLogoBg)"/>
+            <rect x="104" y="232" width="816" height="560" rx="96" fill="none" stroke="#f2f2f5" stroke-width="76"/>
+            <polyline points="206,512 356,512 428,344 526,684 604,408 660,512 818,512" fill="none" stroke="url(#cornerLogoPulse)"
+                      stroke-width="80" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+      </div>
+    </header>
+
+    <main class="dashboard" id="dashboard-full">
+      <section class="card device-card card-cpu">
+        <div class="card-header">
+          <span class="icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="1.5"/><rect x="9" y="9" width="6" height="6" rx="0.5"/><path d="M9 2v3M12 2v3M15 2v3M9 19v3M12 19v3M15 19v3M2 9h3M2 12h3M2 15h3M19 9h3M19 12h3M19 15h3"/></svg>
+          </span>
+          <span class="device-name" id="cpu-name">AMD Ryzen 7 3700X</span>
+        </div>
+        <div class="device-body">
+          <div class="ring-wrap">
+            <svg class="ring" viewBox="0 0 120 120">
+              <circle class="ring-track" cx="60" cy="60" r="52" />
+              <circle class="ring-fill" id="cpu-ring" cx="60" cy="60" r="52" />
+            </svg>
+            <div class="ring-label">
+              <div class="ring-number">
+                <span class="ring-value" id="cpu-load">0</span><span class="ring-pct">%</span>
+              </div>
+              <div class="ring-caption">Load</div>
+            </div>
+          </div>
+          <div class="stats">
+            <div class="stat" data-stat="temp">
+              <div class="bar"><div class="bar-fill" id="cpu-temp-bar"></div></div>
+              <div class="stat-meta">
+                <span class="stat-label">Temperature</span>
+                <span class="stat-value" id="cpu-temp-value">--°C</span>
+              </div>
+            </div>
+            <div class="stat" data-stat="clock">
+              <div class="bar"><div class="bar-fill" id="cpu-clock-bar"></div></div>
+              <div class="stat-meta">
+                <span class="stat-label">Clock</span>
+                <span class="stat-value" id="cpu-clock-value">--</span>
+              </div>
+            </div>
+            <div class="stat" data-stat="power">
+              <div class="bar"><div class="bar-fill" id="cpu-power-bar"></div></div>
+              <div class="stat-meta">
+                <span class="stat-label">Power</span>
+                <span class="stat-value" id="cpu-power-value">-- W</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card device-card card-gpu">
+        <div class="card-header">
+          <span class="icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6" width="19" height="11" rx="1.5"/><circle cx="8" cy="11.5" r="2.2"/><circle cx="14.5" cy="11.5" r="2.2"/><path d="M2.5 20h19M6 6V3.5M18 6V3.5"/></svg>
+          </span>
+          <span class="device-name" id="gpu-name">NVIDIA GeForce RTX 2070-S</span>
+        </div>
+        <div class="device-body">
+          <div class="ring-wrap">
+            <svg class="ring" viewBox="0 0 120 120">
+              <circle class="ring-track" cx="60" cy="60" r="52" />
+              <circle class="ring-fill" id="gpu-ring" cx="60" cy="60" r="52" />
+            </svg>
+            <div class="ring-label">
+              <div class="ring-number">
+                <span class="ring-value" id="gpu-load">0</span><span class="ring-pct">%</span>
+              </div>
+              <div class="ring-caption">Load</div>
+            </div>
+          </div>
+          <div class="stats">
+            <div class="stat" data-stat="temp">
+              <div class="bar"><div class="bar-fill" id="gpu-temp-bar"></div></div>
+              <div class="stat-meta">
+                <span class="stat-label">Temperature</span>
+                <span class="stat-value" id="gpu-temp-value">--°C</span>
+              </div>
+            </div>
+            <div class="stat" data-stat="clock">
+              <div class="bar"><div class="bar-fill" id="gpu-clock-bar"></div></div>
+              <div class="stat-meta">
+                <span class="stat-label">Clock</span>
+                <span class="stat-value" id="gpu-clock-value">--</span>
+              </div>
+            </div>
+            <div class="stat" data-stat="power">
+              <div class="bar"><div class="bar-fill" id="gpu-power-bar"></div></div>
+              <div class="stat-meta">
+                <span class="stat-label">Power</span>
+                <span class="stat-value" id="gpu-power-value">-- W</span>
+              </div>
+            </div>
+            <div class="stat" data-stat="fan">
+              <div class="bar"><div class="bar-fill" id="gpu-fan-bar"></div></div>
+              <div class="stat-meta">
+                <span class="stat-label">Fan</span>
+                <span class="stat-value" id="gpu-fan-value">--%</span>
+              </div>
+            </div>
+            <div class="stat" data-stat="vram">
+              <div class="bar"><div class="bar-fill" id="gpu-vram-bar"></div></div>
+              <div class="stat-meta">
+                <span class="stat-label">VRAM</span>
+                <span class="stat-value" id="gpu-vram-value">--</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card small-card card-ram">
+        <div class="card-header">
+          <span class="icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="10" rx="1.2"/><path d="M7 7V4M11 7V4M15 7V4M17.5 7V4M7 17v3M11 17v3M15 17v3"/></svg>
+          </span>
+          <span class="device-name">RAM</span>
+        </div>
+        <div class="ram-row">
+          <span class="stat-label">Load</span>
+          <div class="bar"><div class="bar-fill" id="ram-bar"></div></div>
+          <span class="stat-value accent" id="ram-value">--%</span>
+        </div>
+        <div class="ram-footer">
+          <span>Used <b id="ram-used">--</b></span>
+          <span>Free <b id="ram-free">--</b></span>
+        </div>
+      </section>
+
+      <section class="card small-card card-net">
+        <div class="card-header">
+          <span class="icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 9.5a11 11 0 0 1 15 0"/><path d="M7.5 12.8a7 7 0 0 1 9 0"/><path d="M10.5 16a3 3 0 0 1 3 0"/><circle cx="12" cy="19.2" r="1.1" fill="currentColor" stroke="none"/></svg>
+          </span>
+          <span class="device-name">Network</span>
+        </div>
+        <div class="net-row">
+          <span class="net-value" id="net-up">--</span>
+          <span class="net-arrow up">↑ Up</span>
+        </div>
+        <div class="net-row">
+          <span class="net-value" id="net-down">--</span>
+          <span class="net-arrow down">↓ Down</span>
+        </div>
+      </section>
+
+      <section class="card small-card card-storage">
+        <div class="card-header">
+          <span class="icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4.5" width="19" height="15" rx="1.5"/><path d="M2.5 14.5h19"/><circle cx="6.5" cy="17" r="0.9" fill="currentColor" stroke="none"/><circle cx="10" cy="17" r="0.9" fill="currentColor" stroke="none"/></svg>
+          </span>
+          <span class="device-name">Storage</span>
+        </div>
+        <div class="storage-list" id="storage-list"></div>
+      </section>
+    </main>
+
+    <!-- Rings are built by main.js from the chosen sensors (MINI_SENSORS). -->
+    <main class="dashboard-minimal" id="dashboard-minimal" hidden></main>
+
+    <!-- ===================== AIDA64-style model ===================== -->
+    <main class="dashboard-aida" id="dashboard-aida" hidden>
+      <section class="aida-card aida-net">
+        <div class="aida-strip-title">NETWORK</div>
+        <div class="aida-strip-body">
+          <div class="aida-gauge">
+            <svg viewBox="0 0 100 100">
+              <path class="aida-gauge-track" d="M14 86 A 44 44 0 1 1 86 86" />
+              <path class="aida-gauge-fill" id="aida-net-down-gauge" d="M14 86 A 44 44 0 1 1 86 86" />
+            </svg>
+            <div class="aida-gauge-label">
+              <span class="aida-gauge-caption">Download</span>
+              <span class="aida-gauge-value" id="aida-net-down">0.0</span>
+            </div>
+          </div>
+          <div class="aida-graph">
+            <span class="aida-graph-max" id="aida-net-down-max">0</span>
+            <svg viewBox="0 0 100 40" preserveAspectRatio="none">
+              <polyline class="aida-line" id="aida-net-down-line" points="" />
+            </svg>
+            <span class="aida-graph-min">0</span>
+          </div>
+          <div class="aida-graph">
+            <span class="aida-graph-max" id="aida-net-up-max">0</span>
+            <svg viewBox="0 0 100 40" preserveAspectRatio="none">
+              <polyline class="aida-line" id="aida-net-up-line" points="" />
+            </svg>
+            <span class="aida-graph-min">0</span>
+          </div>
+          <div class="aida-gauge">
+            <svg viewBox="0 0 100 100">
+              <path class="aida-gauge-track" d="M14 86 A 44 44 0 1 1 86 86" />
+              <path class="aida-gauge-fill" id="aida-net-up-gauge" d="M14 86 A 44 44 0 1 1 86 86" />
+            </svg>
+            <div class="aida-gauge-label">
+              <span class="aida-gauge-caption">Upload</span>
+              <span class="aida-gauge-value" id="aida-net-up">0.0</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="aida-card aida-storage">
+        <div class="aida-strip-title">STORAGE</div>
+        <div class="aida-strip-body aida-storage-body" id="aida-storage-list"></div>
+      </section>
+
+      <section class="aida-card aida-device aida-cpu">
+        <div class="aida-device-head">
+          <span class="icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="1.5"/><rect x="9" y="9" width="6" height="6" rx="0.5"/><path d="M9 2v3M12 2v3M15 2v3M9 19v3M12 19v3M15 19v3M2 9h3M2 12h3M2 15h3M19 9h3M19 12h3M19 15h3"/></svg>
+          </span>
+          <span id="aida-cpu-name">CPU</span>
+        </div>
+        <div class="aida-device-body">
+          <div class="aida-big-gauge">
+            <svg viewBox="0 0 120 120">
+              <path class="aida-big-track" d="M18 102 A 54 54 0 1 1 102 102" />
+              <path class="aida-big-fill" id="aida-cpu-load-gauge" d="M18 102 A 54 54 0 1 1 102 102" />
+            </svg>
+            <div class="aida-big-label">
+              <div class="aida-big-number">
+                <span id="aida-cpu-load">0</span><span class="aida-big-pct">%</span>
+              </div>
+              <div class="aida-big-caption">CPU</div>
+            </div>
+          </div>
+
+          <div class="aida-rows">
+            <div class="aida-row">
+              <div class="aida-gauge small">
+                <svg viewBox="0 0 100 100">
+                  <path class="aida-gauge-track" d="M14 86 A 44 44 0 1 1 86 86" />
+                  <path class="aida-gauge-fill" id="aida-cpu-temp-gauge" d="M14 86 A 44 44 0 1 1 86 86" />
+                </svg>
+                <div class="aida-gauge-label">
+                  <span class="aida-gauge-value" id="aida-cpu-temp">--</span>
+                  <span class="aida-gauge-caption">Temp</span>
+                </div>
+              </div>
+              <div class="aida-graph">
+                <span class="aida-graph-max">100°C</span>
+                <svg viewBox="0 0 100 40" preserveAspectRatio="none">
+                  <polyline class="aida-line" id="aida-cpu-temp-line" points="" />
+                </svg>
+                <span class="aida-graph-min">0°C</span>
+              </div>
+            </div>
+            <div class="aida-row">
+              <div class="aida-gauge small">
+                <svg viewBox="0 0 100 100">
+                  <path class="aida-gauge-track" d="M14 86 A 44 44 0 1 1 86 86" />
+                  <path class="aida-gauge-fill" id="aida-cpu-clock-gauge" d="M14 86 A 44 44 0 1 1 86 86" />
+                </svg>
+                <div class="aida-gauge-label">
+                  <span class="aida-gauge-value" id="aida-cpu-clock">--</span>
+                  <span class="aida-gauge-caption">Clock</span>
+                </div>
+              </div>
+              <div class="aida-graph">
+                <span class="aida-graph-max" id="aida-cpu-clock-max">5000 MHz</span>
+                <svg viewBox="0 0 100 40" preserveAspectRatio="none">
+                  <polyline class="aida-line" id="aida-cpu-clock-line" points="" />
+                </svg>
+                <span class="aida-graph-min">0</span>
+              </div>
+            </div>
+            <div class="aida-row">
+              <div class="aida-gauge small">
+                <svg viewBox="0 0 100 100">
+                  <path class="aida-gauge-track" d="M14 86 A 44 44 0 1 1 86 86" />
+                  <path class="aida-gauge-fill" id="aida-ram-gauge" d="M14 86 A 44 44 0 1 1 86 86" />
+                </svg>
+                <div class="aida-gauge-label">
+                  <span class="aida-gauge-value" id="aida-ram-pct">--</span>
+                  <span class="aida-gauge-caption">RAM</span>
+                </div>
+              </div>
+              <div class="aida-graph">
+                <span class="aida-graph-max">100%</span>
+                <svg viewBox="0 0 100 40" preserveAspectRatio="none">
+                  <polyline class="aida-line" id="aida-ram-line" points="" />
+                </svg>
+                <span class="aida-graph-min">0%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="aida-card aida-device aida-gpu">
+        <div class="aida-device-head">
+          <span class="icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6" width="19" height="11" rx="1.5"/><circle cx="8" cy="11.5" r="2.2"/><circle cx="14.5" cy="11.5" r="2.2"/><path d="M2.5 20h19M6 6V3.5M18 6V3.5"/></svg>
+          </span>
+          <span id="aida-gpu-name">GPU</span>
+        </div>
+        <div class="aida-device-body">
+          <div class="aida-big-gauge">
+            <svg viewBox="0 0 120 120">
+              <path class="aida-big-track" d="M18 102 A 54 54 0 1 1 102 102" />
+              <path class="aida-big-fill" id="aida-gpu-load-gauge" d="M18 102 A 54 54 0 1 1 102 102" />
+            </svg>
+            <div class="aida-big-label">
+              <div class="aida-big-number">
+                <span id="aida-gpu-load">0</span><span class="aida-big-pct">%</span>
+              </div>
+              <div class="aida-big-caption">GPU</div>
+            </div>
+          </div>
+
+          <div class="aida-rows">
+            <div class="aida-row">
+              <div class="aida-gauge small">
+                <svg viewBox="0 0 100 100">
+                  <path class="aida-gauge-track" d="M14 86 A 44 44 0 1 1 86 86" />
+                  <path class="aida-gauge-fill" id="aida-gpu-temp-gauge" d="M14 86 A 44 44 0 1 1 86 86" />
+                </svg>
+                <div class="aida-gauge-label">
+                  <span class="aida-gauge-value" id="aida-gpu-temp">--</span>
+                  <span class="aida-gauge-caption">Temp</span>
+                </div>
+              </div>
+              <div class="aida-graph">
+                <span class="aida-graph-max">100°C</span>
+                <svg viewBox="0 0 100 40" preserveAspectRatio="none">
+                  <polyline class="aida-line" id="aida-gpu-temp-line" points="" />
+                </svg>
+                <span class="aida-graph-min">0°C</span>
+              </div>
+            </div>
+            <div class="aida-row">
+              <div class="aida-gauge small">
+                <svg viewBox="0 0 100 100">
+                  <path class="aida-gauge-track" d="M14 86 A 44 44 0 1 1 86 86" />
+                  <path class="aida-gauge-fill" id="aida-gpu-clock-gauge" d="M14 86 A 44 44 0 1 1 86 86" />
+                </svg>
+                <div class="aida-gauge-label">
+                  <span class="aida-gauge-value" id="aida-gpu-clock">--</span>
+                  <span class="aida-gauge-caption">Clock</span>
+                </div>
+              </div>
+              <div class="aida-graph">
+                <span class="aida-graph-max" id="aida-gpu-clock-max">3000 MHz</span>
+                <svg viewBox="0 0 100 40" preserveAspectRatio="none">
+                  <polyline class="aida-line" id="aida-gpu-clock-line" points="" />
+                </svg>
+                <span class="aida-graph-min">0</span>
+              </div>
+            </div>
+            <div class="aida-row">
+              <div class="aida-gauge small">
+                <svg viewBox="0 0 100 100">
+                  <path class="aida-gauge-track" d="M14 86 A 44 44 0 1 1 86 86" />
+                  <path class="aida-gauge-fill" id="aida-gpu-fan-gauge" d="M14 86 A 44 44 0 1 1 86 86" />
+                </svg>
+                <div class="aida-gauge-label">
+                  <span class="aida-gauge-value" id="aida-gpu-fan">--</span>
+                  <span class="aida-gauge-caption">Fan</span>
+                </div>
+              </div>
+              <div class="aida-graph">
+                <span class="aida-graph-max">100%</span>
+                <svg viewBox="0 0 100 40" preserveAspectRatio="none">
+                  <polyline class="aida-line" id="aida-gpu-fan-line" points="" />
+                </svg>
+                <span class="aida-graph-min">0%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- ===================== Temperatures-only model ===================== -->
+    <main class="dashboard-temps" id="dashboard-temps"
+          data-layout="row" data-align="left" data-valign="bottom" data-order="cpu-top" data-spacing="together" hidden>
+      <div class="temps-item temps-gpu">
+        <div class="temps-caption">GPU</div>
+        <div class="temps-number"><span id="temps-gpu">--</span><span class="temps-unit">°C</span></div>
+        <!-- "Anéis" style: same arc as the minimal model. -->
+        <svg class="temps-ring" viewBox="0 20 160 130">
+          <path class="mini-track" d="M22 138 A 68 68 0 1 1 138 138" />
+          <path class="mini-fill" id="temps-gpu-ring" d="M22 138 A 68 68 0 1 1 138 138" />
+          <text class="mini-value" x="80" y="97"><tspan id="temps-gpu-ring-value">--</tspan><tspan class="temps-ring-unit">°C</tspan></text>
+          <text class="mini-caption temps-ring-caption" x="80" y="129">GPU</text>
+        </svg>
+      </div>
+      <div class="temps-item temps-cpu">
+        <div class="temps-caption">CPU</div>
+        <div class="temps-number"><span id="temps-cpu">--</span><span class="temps-unit">°C</span></div>
+        <!-- "Anéis" style: same arc as the minimal model. -->
+        <svg class="temps-ring" viewBox="0 20 160 130">
+          <path class="mini-track" d="M22 138 A 68 68 0 1 1 138 138" />
+          <path class="mini-fill" id="temps-cpu-ring" d="M22 138 A 68 68 0 1 1 138 138" />
+          <text class="mini-value" x="80" y="97"><tspan id="temps-cpu-ring-value">--</tspan><tspan class="temps-ring-unit">°C</tspan></text>
+          <text class="mini-caption temps-ring-caption" x="80" y="129">CPU</text>
+        </svg>
+      </div>
+    </main>
+
+    <!-- ===================== Glass model ===================== -->
+    <!-- Frosted cards over the video, or over slowly moving color blobs. -->
+    <canvas class="glass-aurora" id="glass-aurora" aria-hidden="true" hidden></canvas>
+    <main class="dashboard-glass" id="dashboard-glass" hidden>
+      <!-- Frosted copy of the video, shown only inside the cards (see main.js). -->
+      <canvas class="glass-frost" id="glass-frost" aria-hidden="true"></canvas>
+      <section class="glass-card glass-big glass-cpu">
+        <header class="glass-head"><span class="glass-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="1.5"/><rect x="9" y="9" width="6" height="6" rx="0.5"/><path d="M9 2v3M12 2v3M15 2v3M9 19v3M12 19v3M15 19v3M2 9h3M2 12h3M2 15h3M19 9h3M19 12h3M19 15h3"/></svg></span><span class="glass-label">CPU</span><span class="glass-name" id="glass-cpu-name">--</span></header>
+        <div class="glass-body">
+          <svg class="glass-ring" viewBox="0 0 120 120">
+            <circle class="glass-ring-track" cx="60" cy="60" r="50" />
+            <circle class="glass-ring-fill" id="glass-cpu-ring" cx="60" cy="60" r="50" />
+            <text class="glass-ring-value" x="60" y="58"><tspan id="glass-cpu-load">--</tspan><tspan class="glass-ring-pct">%</tspan></text>
+            <text class="glass-ring-caption" x="60" y="80">LOAD</text>
+          </svg>
+          <div class="glass-stats">
+            <div class="glass-temp"><span id="glass-cpu-temp">--</span><small>°C</small></div>
+            <div class="glass-row"><span>Clock</span><b id="glass-cpu-clock">--</b></div>
+            <div class="glass-row"><span>Power</span><b id="glass-cpu-power">--</b></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="glass-card glass-big glass-gpu">
+        <header class="glass-head"><span class="glass-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6" width="19" height="11" rx="1.5"/><circle cx="8" cy="11.5" r="2.2"/><circle cx="14.5" cy="11.5" r="2.2"/><path d="M2.5 20h19M6 6V3.5M18 6V3.5"/></svg></span><span class="glass-label">GPU</span><span class="glass-name" id="glass-gpu-name">--</span></header>
+        <div class="glass-body">
+          <svg class="glass-ring" viewBox="0 0 120 120">
+            <circle class="glass-ring-track" cx="60" cy="60" r="50" />
+            <circle class="glass-ring-fill" id="glass-gpu-ring" cx="60" cy="60" r="50" />
+            <text class="glass-ring-value" x="60" y="58"><tspan id="glass-gpu-load">--</tspan><tspan class="glass-ring-pct">%</tspan></text>
+            <text class="glass-ring-caption" x="60" y="80">LOAD</text>
+          </svg>
+          <div class="glass-stats">
+            <div class="glass-temp"><span id="glass-gpu-temp">--</span><small>°C</small></div>
+            <div class="glass-row"><span>Clock</span><b id="glass-gpu-clock">--</b></div>
+            <div class="glass-row"><span>Power</span><b id="glass-gpu-power">--</b></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="glass-card glass-small glass-ram">
+        <header class="glass-head"><span class="glass-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="10" rx="1.2"/><path d="M7 7V4M11 7V4M15 7V4M17.5 7V4M7 17v3M11 17v3M15 17v3"/></svg></span><span class="glass-label">RAM</span></header>
+        <div class="glass-value"><span id="glass-ram-load">--</span><small>%</small></div>
+        <div class="glass-sub" id="glass-ram-detail">--</div>
+        <div class="glass-bar"><i id="glass-ram-bar"></i></div>
+      </section>
+
+      <section class="glass-card glass-small glass-vram">
+        <header class="glass-head"><span class="glass-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6" width="19" height="11" rx="1.5"/><circle cx="8" cy="11.5" r="2.2"/><circle cx="14.5" cy="11.5" r="2.2"/><path d="M2.5 20h19M6 6V3.5M18 6V3.5"/></svg></span><span class="glass-label">VRAM</span></header>
+        <div class="glass-value"><span id="glass-vram-load">--</span><small>%</small></div>
+        <div class="glass-sub" id="glass-vram-detail">--</div>
+        <div class="glass-bar"><i id="glass-vram-bar"></i></div>
+      </section>
+
+      <section class="glass-card glass-small glass-net">
+        <header class="glass-head"><span class="glass-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 9.5a11 11 0 0 1 15 0"/><path d="M7.5 12.8a7 7 0 0 1 9 0"/><path d="M10.5 16a3 3 0 0 1 3 0"/><circle cx="12" cy="19.2" r="1.1" fill="currentColor" stroke="none"/></svg></span><span class="glass-label">Network</span></header>
+        <div class="glass-net-row"><span class="glass-arrow">↓</span><b id="glass-net-down">--</b></div>
+        <div class="glass-net-row"><span class="glass-arrow">↑</span><b id="glass-net-up">--</b></div>
+      </section>
+
+      <section class="glass-card glass-small glass-disk">
+        <header class="glass-head"><span class="glass-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4.5" width="19" height="15" rx="1.5"/><path d="M2.5 14.5h19"/><circle cx="6.5" cy="17" r="0.9" fill="currentColor" stroke="none"/><circle cx="10" cy="17" r="0.9" fill="currentColor" stroke="none"/></svg></span><span class="glass-label">Storage</span></header>
+        <div class="glass-drives" id="glass-drives"></div>
+      </section>
+    </main>
+  </body>
+</html>

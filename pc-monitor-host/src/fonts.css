@@ -1,0 +1,38 @@
+/* Fonts are served from the PC itself (assets/fonts), so the phone never needs
+   internet access to render them. Variable fonts cover every weight in one
+   file; the static ones list each weight the dashboard uses. */
+
+@font-face {
+  font-family: "Inter";
+  src: url("assets/fonts/inter.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Exo 2";
+  src: url("assets/fonts/exo2.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Orbitron";
+  src: url("assets/fonts/orbitron.woff2") format("woff2");
+  font-weight: 400 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Oxanium";
+  src: url("assets/fonts/oxanium.woff2") format("woff2");
+  font-weight: 200 800;
+  font-display: swap;
+}
+
+@font-face { font-family: "Rajdhani"; src: url("assets/fonts/rajdhani-300.woff2") format("woff2"); font-weight: 300; font-display: swap; }
+@font-face { font-family: "Rajdhani"; src: url("assets/fonts/rajdhani-400.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Rajdhani"; src: url("assets/fonts/rajdhani-600.woff2") format("woff2"); font-weight: 500 600; font-display: swap; }
+@font-face { font-family: "Rajdhani"; src: url("assets/fonts/rajdhani-700.woff2") format("woff2"); font-weight: 700 900; font-display: swap; }
+
+@font-face { font-family: "Chakra Petch"; src: url("assets/fonts/chakra-petch-300.woff2") format("woff2"); font-weight: 300; font-display: swap; }
+@font-face { font-family: "Chakra Petch"; src: url("assets/fonts/chakra-petch-400.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Chakra Petch"; src: url("assets/fonts/chakra-petch-600.woff2") format("woff2"); font-weight: 500 600; font-display: swap; }
+@font-face { font-family: "Chakra Petch"; src: url("assets/fonts/chakra-petch-700.woff2") format("woff2"); font-weight: 700 900; font-display: swap; }

@@ -1,0 +1,1225 @@
+:root {
+  --bg: #0a0a0a;
+  --card-bg: #111111;
+  --card-border: #262626;
+  --text-primary: #f5f5f5;
+  --text-muted: #8a8a8a;
+  --accent: #ff7a1a;
+  --accent-2: #ff7a1a;
+  --track: #2a2a2a;
+  --font-scale: 1;
+  --density: 1;
+  --bar-thickness: 1;
+  --ring-thickness: 1;
+  --icon-scale: 1;
+  --fps-scale: 1;
+  --temps-cpu-scale: 1;
+  --temps-gpu-scale: 1;
+  --temps-margin: 1;
+  --radius: 12px;
+  --font-family: "Segoe UI", Roboto, -apple-system, sans-serif;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Rules that set `display` (flex rows, cards...) would otherwise override the
+   hidden attribute, and toggled rows would stay on screen. */
+[hidden] {
+  display: none !important;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100vw;
+  height: 100vh;
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  overflow: hidden;
+  user-select: none;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+.screensaver {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
+  background: #000;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 999;
+  transition: opacity 0.8s ease;
+}
+
+body.screensaver-active .screensaver {
+  opacity: 1;
+}
+
+body.bg-always .screensaver {
+  opacity: 1;
+  z-index: 0;
+}
+body.bg-always .topbar,
+body.bg-always .dashboard,
+body.bg-always .dashboard-minimal,
+body.bg-always .dashboard-aida,
+body.bg-always .dashboard-temps,
+body.bg-always .dashboard-glass {
+  position: relative;
+  z-index: 1;
+}
+body.bg-always .card {
+  background: rgba(10, 10, 10, 0.55);
+}
+body.bg-always::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, var(--video-overlay, 0.35));
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Screensaver temperature overlay: small, translucent, in one corner, above
+   the video. Only visible while the screensaver is actually playing. */
+.ss-temps {
+  position: fixed;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.2vh;
+  padding: 3vh 3vw;
+  color: rgba(255, 255, 255, 0.78);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.75);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+.ss-temps[hidden] { display: none; }
+body.screensaver-active .ss-temps { opacity: 1; }
+.ss-temps[data-corner="top-left"] { top: 0; left: 0; align-items: flex-start; }
+.ss-temps[data-corner="top-right"] { top: 0; right: 0; }
+.ss-temps[data-corner="bottom-left"] { bottom: 0; left: 0; align-items: flex-start; }
+.ss-temps[data-corner="bottom-right"] { bottom: 0; right: 0; }
+.ss-temp {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6vw;
+  line-height: 1.1;
+}
+.ss-temp span {
+  font-size: calc(clamp(9px, 1.6vh, 16px) * var(--font-scale));
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  opacity: 0.7;
+}
+.ss-temp b {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.ss-temp-cpu b { font-size: calc(clamp(18px, 4.2vh, 40px) * var(--font-scale)); }
+.ss-temp-gpu b { font-size: calc(clamp(13px, 2.8vh, 28px) * var(--font-scale)); }
+
+/* PC away: a near-black screen with one quiet line, above everything
+   (video included), while the phone dims and is allowed to sleep. */
+.host-away-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+}
+body.host-away .host-away-screen { display: flex; }
+.host-away-text {
+  font-size: calc(clamp(12px, 2.4vh, 24px) * var(--font-scale));
+  font-weight: 600;
+  letter-spacing: 2px;
+  color: #4a4a4a;
+  animation: host-away-pulse 3s ease-in-out infinite;
+}
+@keyframes host-away-pulse {
+  50% { opacity: 0.35; }
+}
+
+/* ---------- Topbar ---------- */
+
+/* Three explicit columns: the side columns are equal (1fr), so the middle one
+   sits at the true center of the screen no matter how wide the title is.
+   Explicit grid-column on each child keeps positions stable when the title or
+   the corner icon is hidden. Everything stays in flow, so the tall clock can't
+   overflow and get clipped at the top. */
+.topbar {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 1.5vw;
+  padding: calc(1.8vh * var(--density)) calc(2.5vw * var(--density)) calc(0.5vh * var(--density));
+  flex: 0 0 auto;
+}
+
+.brand {
+  grid-column: 1;
+  justify-self: start;
+  font-size: calc(clamp(16px, 2.8vh, 30px) * var(--font-scale));
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #d9d9d9;
+  white-space: nowrap;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.clock {
+  grid-column: 2;
+  justify-self: center;
+  font-size: calc(clamp(24px, 5vh, 50px) * var(--font-scale));
+  font-weight: 700;
+  letter-spacing: 1px;
+  white-space: nowrap;
+  line-height: 1.15;
+}
+/* Title, clock, FPS and icon all switched off: give the space to the panel. */
+.topbar.empty {
+  display: none;
+}
+
+.topbar[data-clock="left"] {
+  grid-template-columns: auto auto 1fr;
+}
+.topbar[data-clock="left"] .clock {
+  justify-self: start;
+}
+.topbar[data-clock="right"] {
+  grid-template-columns: auto 1fr auto;
+}
+.topbar[data-clock="right"] .clock {
+  justify-self: end;
+}
+
+.topbar-right {
+  grid-column: 3;
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 1.2vw;
+  min-width: 0;
+}
+
+.fps {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35em;
+  white-space: nowrap;
+}
+.fps[hidden] { display: none; }
+.fps-value {
+  font-size: calc(clamp(16px, 3vh, 30px) * var(--font-scale) * var(--fps-scale));
+  font-weight: 700;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+.fps-unit {
+  font-size: calc(clamp(10px, 1.7vh, 17px) * var(--font-scale) * var(--fps-scale));
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 1px;
+}
+.fps.idle .fps-value { color: var(--text-muted); }
+
+.corner-logo {
+  width: calc(clamp(24px, 4.4vh, 48px) * var(--font-scale));
+  height: calc(clamp(24px, 4.4vh, 48px) * var(--font-scale));
+  flex-shrink: 0;
+}
+.corner-logo svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ---------- Full dashboard ---------- */
+
+.dashboard:not([hidden]) {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  grid-template-rows: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: calc(1.4vh * var(--density)) calc(1.4vw * var(--density));
+  padding: calc(1vh * var(--density)) calc(1.6vw * var(--density)) calc(1.6vh * var(--density));
+}
+
+.card-cpu { grid-column: 1 / 4; grid-row: 1; }
+.card-gpu { grid-column: 4 / 7; grid-row: 1; }
+.card-ram { grid-column: 1 / 3; grid-row: 2; }
+.card-net { grid-column: 3 / 5; grid-row: 2; }
+.card-storage { grid-column: 5 / 7; grid-row: 2; }
+
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  padding: calc(1.6vh * var(--density)) calc(1.8vw * var(--density));
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: calc(0.8vw * var(--density));
+  font-size: calc(clamp(13px, 2.3vh, 22px) * var(--font-scale));
+  font-weight: 600;
+  margin-bottom: calc(1.2vh * var(--density));
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.card-header .icon {
+  width: calc(clamp(18px, 3vh, 32px) * var(--font-scale) * var(--icon-scale));
+  height: calc(clamp(18px, 3vh, 32px) * var(--font-scale) * var(--icon-scale));
+  color: var(--text-muted);
+  flex-shrink: 0;
+  display: inline-flex;
+}
+.card-header .icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.device-body {
+  display: flex;
+  align-items: center;
+  gap: 1.8vw;
+  flex: 1;
+  min-height: 0;
+}
+
+.ring-wrap {
+  position: relative;
+  width: calc(clamp(74px, 15vh, 150px) * var(--font-scale));
+  height: calc(clamp(74px, 15vh, 150px) * var(--font-scale));
+  flex-shrink: 0;
+}
+.ring {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+.ring-track {
+  fill: none;
+  stroke: var(--track);
+  stroke-width: calc(9 * var(--ring-thickness));
+}
+.ring-fill {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: calc(9 * var(--ring-thickness));
+  stroke-linecap: round;
+  stroke-dasharray: 326.7;
+  stroke-dashoffset: 326.7;
+  transition: stroke-dashoffset 0.4s ease;
+}
+/* Square style applies to the whole ring — the dark track included, not only
+   the colored fill. */
+body.square-style .ring-fill,
+body.square-style .mini-fill,
+body.square-style .mini-track,
+body.square-style .aida-gauge-track,
+body.square-style .aida-big-track {
+  stroke-linecap: butt;
+}
+.ring-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.ring-number {
+  display: flex;
+  align-items: baseline;
+}
+.ring-value {
+  font-size: calc(clamp(20px, 3.8vh, 40px) * var(--font-scale));
+  font-weight: 700;
+  line-height: 1;
+}
+.ring-pct {
+  font-size: calc(clamp(12px, 2.2vh, 22px) * var(--font-scale));
+  color: var(--accent);
+  font-weight: 700;
+  margin-left: 2px;
+}
+.ring-caption {
+  font-size: calc(clamp(9px, 1.5vh, 15px) * var(--font-scale));
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* Stats: bar on top, label + value underneath (matches the reference layout) */
+.stats {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: calc(1.4vh * var(--density));
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: calc(0.4vh * var(--density));
+  min-width: 0;
+}
+
+.stat-meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.6vw;
+  min-width: 0;
+}
+
+.stat-label {
+  font-size: calc(clamp(11px, 1.8vh, 18px) * var(--font-scale));
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stat-value {
+  font-size: calc(clamp(11px, 1.8vh, 18px) * var(--font-scale));
+  font-weight: 600;
+  text-align: right;
+  white-space: nowrap;
+}
+.stat-value.accent {
+  color: var(--accent);
+  font-size: calc(clamp(16px, 3vh, 28px) * var(--font-scale));
+}
+
+.bar {
+  height: calc(clamp(5px, 1.1vh, 11px) * var(--font-scale) * var(--bar-thickness));
+  border-radius: calc(var(--radius) / 3);
+  background: var(--track);
+  overflow: hidden;
+  min-width: 0;
+}
+.bar-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--accent);
+  border-radius: calc(var(--radius) / 3);
+  transition: width 0.4s ease;
+}
+
+/* ---------- Small cards ---------- */
+
+.small-card {
+  justify-content: center;
+  gap: calc(1.2vh * var(--density));
+}
+
+.ram-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.8vw;
+}
+
+.ram-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 1vw;
+  font-size: calc(clamp(10px, 1.6vh, 16px) * var(--font-scale));
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.ram-footer b {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.net-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.8vw;
+}
+.net-value {
+  font-size: calc(clamp(16px, 3vh, 28px) * var(--font-scale));
+  font-weight: 700;
+  color: var(--accent);
+  white-space: nowrap;
+}
+.net-arrow {
+  font-size: calc(clamp(11px, 1.8vh, 18px) * var(--font-scale));
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.storage-list {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: calc(1.1vh * var(--density));
+  flex: 1;
+}
+.storage-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.8vw;
+}
+.storage-name {
+  font-size: calc(clamp(11px, 1.8vh, 18px) * var(--font-scale));
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.storage-pct {
+  font-size: calc(clamp(11px, 1.8vh, 18px) * var(--font-scale));
+  font-weight: 700;
+  color: var(--accent);
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* ---------- Minimal dashboard ---------- */
+
+/* The ring count is up to the user, so main.js picks the column/row count
+   that makes them as large as the screen allows (--mini-cols/--mini-rows).
+   Flex-wrap keeps a last, incomplete row centered. */
+.dashboard-minimal:not([hidden]) {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-content: center;
+  padding: calc(0.5vh * var(--density)) calc(1.6vw * var(--density)) calc(3vh * var(--density));
+}
+
+.mini-ring {
+  position: relative;
+  flex: 0 0 calc(100% / var(--mini-cols, 3));
+  height: calc(100% / var(--mini-rows, 2));
+  padding: calc(0.6vh * var(--density)) calc(0.6vw * var(--density));
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mini-ring svg {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+}
+.mini-track {
+  fill: none;
+  stroke: var(--track);
+  stroke-width: calc(8 * var(--ring-thickness));
+  stroke-linecap: round;
+}
+.mini-fill {
+  fill: none;
+  stroke: url(#accentGradient);
+  stroke-width: calc(8 * var(--ring-thickness));
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.5s ease;
+}
+
+/* Labels live inside the SVG, so their size is in the same coordinate system
+   as the arc: they scale exactly with the ring, at any screen size. */
+.mini-value {
+  font-size: 40px;
+  font-weight: 700;
+  fill: var(--text-primary);
+  text-anchor: middle;
+  dominant-baseline: middle;
+  letter-spacing: -1px;
+}
+.mini-caption {
+  font-size: 14px;
+  font-weight: 700;
+  fill: var(--text-muted);
+  text-anchor: middle;
+  dominant-baseline: middle;
+  letter-spacing: 1.5px;
+}
+
+/* ---------- AIDA64-style model ---------- */
+
+.dashboard-aida:not([hidden]) {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: minmax(0, 0.62fr) minmax(0, 1fr);
+  gap: calc(1vh * var(--density)) calc(1vw * var(--density));
+  padding: calc(0.6vh * var(--density)) calc(1.2vw * var(--density)) calc(1.2vh * var(--density));
+}
+
+.aida-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  padding: calc(0.9vh * var(--density)) calc(1.1vw * var(--density));
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.aida-strip-title {
+  text-align: center;
+  font-size: calc(clamp(10px, 1.7vh, 17px) * var(--font-scale));
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: var(--text-primary);
+  margin-bottom: calc(0.6vh * var(--density));
+}
+
+.aida-strip-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: stretch;
+  gap: calc(0.8vw * var(--density));
+}
+
+/* Gauges (3/4 arc). Sized by the available row height so they never overflow
+   or collide with the neighbouring row. */
+.aida-gauge {
+  position: relative;
+  height: 100%;
+  aspect-ratio: 1;
+  width: auto;
+  max-width: 38%;
+  flex-shrink: 0;
+}
+.aida-gauge svg {
+  width: 100%;
+  height: 100%;
+}
+.aida-gauge-track {
+  fill: none;
+  stroke: var(--track);
+  stroke-width: calc(8 * var(--ring-thickness));
+  stroke-linecap: round;
+}
+/* Butt caps: a round cap on a near-zero arc renders as a fat dot. */
+.aida-gauge-fill {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: calc(8 * var(--ring-thickness));
+  stroke-linecap: butt;
+  transition: stroke-dashoffset 0.4s ease;
+}
+.aida-gauge-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+}
+.aida-gauge-value {
+  font-size: calc(clamp(10px, 1.7vh, 17px) * var(--font-scale));
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.1;
+  letter-spacing: -0.3px;
+}
+.aida-gauge-caption {
+  font-size: calc(clamp(8px, 1.25vh, 12px) * var(--font-scale));
+  color: var(--text-muted);
+  line-height: 1.1;
+}
+
+/* Sparkline graphs */
+.aida-graph {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: 1px solid var(--card-border);
+  border-radius: calc(var(--radius) / 4);
+  background: rgba(255, 255, 255, 0.015);
+  overflow: hidden;
+}
+.aida-graph svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.aida-line {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.4;
+  vector-effect: non-scaling-stroke;
+}
+.aida-graph-max,
+.aida-graph-min {
+  position: absolute;
+  left: 3px;
+  font-size: calc(clamp(7px, 1.1vh, 11px) * var(--font-scale));
+  color: var(--text-muted);
+  pointer-events: none;
+}
+.aida-graph-max { top: 1px; }
+.aida-graph-min { bottom: 1px; }
+
+/* Device cards (CPU / GPU) */
+.aida-device-head {
+  display: flex;
+  align-items: center;
+  gap: calc(0.6vw * var(--density));
+  font-size: calc(clamp(12px, 2.1vh, 21px) * var(--font-scale));
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: calc(0.6vh * var(--density));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.aida-device-head .icon {
+  width: calc(clamp(16px, 2.6vh, 28px) * var(--font-scale) * var(--icon-scale));
+  height: calc(clamp(16px, 2.6vh, 28px) * var(--font-scale) * var(--icon-scale));
+  color: var(--text-muted);
+  flex-shrink: 0;
+  display: inline-flex;
+}
+.aida-device-head .icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.aida-device-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  gap: calc(1vw * var(--density));
+}
+
+.aida-big-gauge {
+  position: relative;
+  height: 100%;
+  aspect-ratio: 1;
+  width: auto;
+  max-width: 42%;
+  flex-shrink: 0;
+}
+.aida-big-gauge svg {
+  width: 100%;
+  height: 100%;
+}
+.aida-big-track {
+  fill: none;
+  stroke: var(--track);
+  stroke-width: calc(9 * var(--ring-thickness));
+  stroke-linecap: round;
+}
+.aida-big-fill {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: calc(9 * var(--ring-thickness));
+  stroke-linecap: butt;
+  transition: stroke-dashoffset 0.4s ease;
+}
+.aida-big-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.aida-big-number {
+  display: flex;
+  align-items: baseline;
+}
+.aida-big-number span:first-child {
+  font-size: calc(clamp(22px, 4.2vh, 46px) * var(--font-scale));
+  font-weight: 300;
+  line-height: 1;
+}
+.aida-big-pct {
+  font-size: calc(clamp(12px, 2.2vh, 22px) * var(--font-scale));
+  color: var(--accent);
+  font-weight: 600;
+  margin-left: 2px;
+}
+.aida-big-caption {
+  font-size: calc(clamp(9px, 1.5vh, 15px) * var(--font-scale));
+  color: var(--text-muted);
+  margin-top: 3px;
+}
+
+.aida-rows {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: calc(0.7vh * var(--density));
+}
+.aida-row {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: stretch;
+  gap: calc(0.7vw * var(--density));
+}
+
+/* Storage strip */
+.aida-storage-body {
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  gap: calc(0.7vh * var(--density));
+}
+.aida-storage-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.7vw;
+}
+.aida-storage-row .storage-name,
+.aida-storage-row .storage-pct {
+  font-size: calc(clamp(10px, 1.6vh, 16px) * var(--font-scale));
+}
+
+/* ---------- Temperatures-only model ---------- */
+
+/* Two readouts (caption over number), side by side (data-layout="row") or
+   stacked ("column"). Position, order, spacing and each number's size come
+   from the settings via data-* and CSS variables. Order uses `order` instead
+   of *-reverse so "left"/"bottom" keep meaning the same edge. */
+.dashboard-temps:not([hidden]) {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  padding: calc(1vh * var(--temps-margin)) calc(3vw * var(--temps-margin)) calc(3vh * var(--temps-margin));
+}
+.dashboard-temps[data-order="cpu-top"] .temps-cpu { order: -1; }
+
+/* Stacked: the column is placed vertically by data-valign; each readout is
+   aligned inside the full width by data-align. */
+.dashboard-temps[data-layout="column"] {
+  flex-direction: column;
+  justify-content: center;
+  gap: calc(2.5vh * var(--density));
+}
+.dashboard-temps[data-layout="column"][data-valign="top"] { justify-content: flex-start; }
+.dashboard-temps[data-layout="column"][data-valign="bottom"] { justify-content: flex-end; }
+.dashboard-temps[data-layout="column"][data-spacing="spread"] { justify-content: space-between; }
+
+/* Side by side: bottoms of the numbers line up, the pair is placed
+   horizontally by data-align and vertically by data-valign. */
+.dashboard-temps[data-layout="row"] {
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-items: flex-end;
+  align-content: flex-end;
+  column-gap: calc(4vw * var(--density));
+  row-gap: calc(2vh * var(--density));
+}
+.dashboard-temps[data-layout="row"][data-align="center"] { justify-content: center; }
+.dashboard-temps[data-layout="row"][data-align="right"] { justify-content: flex-end; }
+.dashboard-temps[data-layout="row"][data-spacing="spread"] { justify-content: space-between; }
+.dashboard-temps[data-layout="row"][data-valign="top"] { align-content: flex-start; }
+.dashboard-temps[data-layout="row"][data-valign="center"] { align-content: center; }
+
+.dashboard-temps[data-align="left"] .temps-item { align-items: flex-start; }
+.dashboard-temps[data-align="center"] .temps-item { align-items: center; }
+.dashboard-temps[data-align="right"] .temps-item { align-items: flex-end; }
+
+.temps-item {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+}
+.temps-caption {
+  font-weight: 700;
+  letter-spacing: 3px;
+  color: var(--text-muted);
+  line-height: 1.1;
+  margin-bottom: 1.2vh;
+}
+/* Right-aligned, the caption would sit right over the °C: keep it over the
+   first digit instead. */
+.dashboard-temps[data-align="right"] .temps-caption {
+  align-self: flex-start;
+}
+/* The empty space a font reserves above and below the digits is measured in
+   main.js (per font) and trimmed with negative margins, so "0% margin"
+   really puts the digits against the edge without clipping them. */
+.temps-number {
+  display: flex;
+  align-items: flex-start;
+  line-height: 1;
+  margin-top: calc(var(--trim-top, 0) * -1em);
+  margin-bottom: calc(var(--trim-bottom, 0) * -1em);
+  font-variant-numeric: tabular-nums;
+}
+/* The number's box starts above the digits by --trim-top (see above), so the
+   unit is pushed down to line up with the top of the digits instead of
+   poking up into the caption line. In unit ems: the digits' top sits
+   trim/0.35 below, minus the unit's own empty space (trim). */
+.temps-unit {
+  color: var(--accent);
+  font-weight: 600;
+  margin-left: 0.08em;
+  margin-top: calc(var(--trim-top, 0) * 1.857em);
+  font-size: 0.35em;
+  line-height: 1;
+}
+.dashboard-temps.no-unit .temps-unit,
+.dashboard-temps.no-unit .temps-ring-unit {
+  display: none;
+}
+
+/* Caption position (numbers style). */
+.dashboard-temps[data-caption="none"] .temps-caption,
+.dashboard-temps[data-caption="none"] .temps-ring-caption {
+  display: none;
+}
+.dashboard-temps[data-caption="below"] .temps-caption {
+  order: 2;
+  margin: 0.8vh 0 0;
+}
+/* Beside: read bottom to top along the left of the digits. */
+.dashboard-temps[data-caption="side"] .temps-item {
+  flex-direction: row;
+  align-items: center;
+}
+.dashboard-temps[data-caption="side"] .temps-caption {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  margin: 0 0.8vw 0 0;
+}
+
+/* Rings style: the same arc as the minimal model, one per temperature. */
+.temps-ring {
+  display: none;
+}
+.dashboard-temps[data-style="rings"] .temps-caption,
+.dashboard-temps[data-style="rings"] .temps-number {
+  display: none;
+}
+.dashboard-temps[data-style="rings"] .temps-ring {
+  display: block;
+  width: auto;
+  overflow: visible;
+}
+.dashboard-temps[data-style="rings"] .temps-cpu .temps-ring { height: calc(64vh * var(--temps-cpu-scale)); }
+.dashboard-temps[data-style="rings"] .temps-gpu .temps-ring { height: calc(44vh * var(--temps-gpu-scale)); }
+.dashboard-temps[data-style="rings"][data-layout="column"] .temps-cpu .temps-ring { height: calc(46vh * var(--temps-cpu-scale)); }
+.dashboard-temps[data-style="rings"][data-layout="column"] .temps-gpu .temps-ring { height: calc(32vh * var(--temps-gpu-scale)); }
+.temps-ring-unit {
+  font-size: 0.45em;
+  fill: var(--accent);
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.temps-cpu .temps-caption { font-size: calc(clamp(14px, 3vh, 30px) * var(--font-scale) * var(--temps-cpu-scale)); }
+.temps-cpu .temps-number { font-size: calc(clamp(70px, 34vh, 340px) * var(--font-scale) * var(--temps-cpu-scale)); font-weight: 700; }
+.temps-gpu .temps-caption { font-size: calc(clamp(11px, 2.2vh, 22px) * var(--font-scale) * var(--temps-gpu-scale)); }
+.temps-gpu .temps-number { font-size: calc(clamp(30px, 12vh, 120px) * var(--font-scale) * var(--temps-gpu-scale)); font-weight: 600; }
+
+@media (max-aspect-ratio: 1/1) {
+  .dashboard:not([hidden]) {
+    grid-template-columns: 1fr;
+    grid-template-rows: repeat(5, minmax(0, 1fr));
+  }
+  .card-cpu, .card-gpu, .card-ram, .card-net, .card-storage {
+    grid-column: 1 / 2;
+    grid-row: auto;
+  }
+}
+
+/* ---------- Glass model ---------- */
+
+/* iOS-style frosted cards over the video ("Sempre no fundo") or over soft
+   color blobs. CSS backdrop-filter costs ~100 ms per frame on a low-end
+   phone (measured on a POCO C40), so both layers are tiny canvases drawn in
+   main.js and stretched to the screen: the stretching is the blur. */
+/* Own compositor layers (will-change): the GPU stretches the tiny canvases,
+   and a number changing in one card only repaints that card, instead of
+   re-rasterizing the stretched background and every shadow on the CPU. */
+.glass-aurora {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+  pointer-events: none;
+  will-change: transform;
+}
+/* The video, blurred, shown only inside the cards (clip-path set in JS). */
+.glass-frost {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  display: none;
+  will-change: transform;
+}
+body.glass-frosted .glass-frost {
+  display: block;
+}
+
+body.model-glass .topbar {
+  position: relative;
+  z-index: 1;
+}
+
+.dashboard-glass:not([hidden]) {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-rows: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: calc(1.8vh * var(--density)) calc(1.4vw * var(--density));
+  padding: calc(1vh * var(--density)) calc(1.8vw * var(--density)) calc(2.2vh * var(--density));
+}
+
+.glass-card {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border-radius: calc(var(--radius) * 1.4);
+  will-change: transform;
+  padding: calc(2vh * var(--density)) calc(1.4vw * var(--density));
+  color: var(--text-primary);
+  background: linear-gradient(
+    150deg,
+    rgb(255 255 255 / calc(0.06 + var(--glass-opacity, 0.35) * 0.4)),
+    rgb(255 255 255 / calc(0.02 + var(--glass-opacity, 0.35) * 0.18))
+  );
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  overflow: hidden;
+}
+.glass-big { grid-row: 1; }
+.glass-cpu { grid-column: 1 / 3; }
+.glass-gpu { grid-column: 3 / 5; }
+.glass-small { grid-row: 2; }
+
+.glass-head {
+  display: flex;
+  align-items: center;
+  gap: 0.6vw;
+  min-width: 0;
+  font-size: calc(clamp(12px, 2.3vh, 22px) * var(--font-scale));
+}
+.glass-icon {
+  display: inline-flex;
+  width: calc(1.35em * var(--icon-scale));
+  height: calc(1.35em * var(--icon-scale));
+  flex-shrink: 0;
+  color: var(--accent);
+}
+.glass-icon svg { width: 100%; height: 100%; }
+.glass-label {
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.glass-name {
+  margin-left: auto;
+  color: var(--text-muted);
+  font-size: 0.85em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.glass-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  gap: 2.4vw;
+}
+.glass-ring {
+  height: 92%;
+  max-height: 100%;
+  aspect-ratio: 1;
+  flex-shrink: 0;
+  overflow: visible;
+}
+.glass-ring-track,
+.glass-ring-fill {
+  fill: none;
+  stroke-width: calc(9 * var(--ring-thickness));
+}
+.glass-ring-track { stroke: rgba(255, 255, 255, 0.14); }
+.glass-ring-fill {
+  stroke: url(#accentGradient);
+  stroke-linecap: round;
+  transform: rotate(-90deg);
+  transform-origin: 60px 60px;
+}
+.glass-ring-value {
+  font-size: 30px;
+  font-weight: 700;
+  fill: var(--text-primary);
+  text-anchor: middle;
+  dominant-baseline: middle;
+  letter-spacing: -1px;
+}
+.glass-ring-pct {
+  font-size: 0.5em;
+  fill: var(--text-muted);
+}
+.glass-ring-caption {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  fill: var(--text-muted);
+  text-anchor: middle;
+}
+
+.glass-stats {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2vh;
+}
+.glass-temp {
+  font-size: calc(clamp(40px, 12vh, 120px) * var(--font-scale));
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -2px;
+  font-variant-numeric: tabular-nums;
+}
+.glass-temp small {
+  font-size: 0.36em;
+  font-weight: 600;
+  color: var(--accent);
+  vertical-align: top;
+  letter-spacing: 0;
+  margin-left: 0.1em;
+}
+.glass-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1vw;
+  padding-top: 1vh;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: calc(clamp(12px, 2.4vh, 24px) * var(--font-scale));
+  white-space: nowrap;
+}
+.glass-row span { color: var(--text-muted); }
+.glass-row b { font-weight: 650; font-variant-numeric: tabular-nums; }
+
+.glass-value {
+  margin-top: auto;
+  font-size: calc(clamp(28px, 8vh, 80px) * var(--font-scale));
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -1px;
+  font-variant-numeric: tabular-nums;
+}
+.glass-value small {
+  font-size: 0.45em;
+  color: var(--text-muted);
+  margin-left: 0.08em;
+}
+.glass-sub {
+  margin-top: 0.6vh;
+  font-size: calc(clamp(11px, 2vh, 20px) * var(--font-scale));
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.glass-bar {
+  margin-top: 1.4vh;
+  height: calc(0.9vh * var(--bar-thickness));
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.14);
+  overflow: hidden;
+}
+.glass-bar i {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+}
+
+.glass-net-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6vw;
+  font-size: calc(clamp(18px, 4.6vh, 46px) * var(--font-scale));
+  font-weight: 700;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.glass-net-row:first-of-type { margin-top: auto; }
+.glass-net-row + .glass-net-row {
+  margin-top: 0.6vh;
+  font-size: calc(clamp(14px, 3vh, 30px) * var(--font-scale));
+  color: var(--text-muted);
+}
+.glass-arrow { color: var(--accent); font-size: 0.8em; }
+
+.glass-drives {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.3vh;
+}
+.glass-drive {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.7vw;
+  font-size: calc(clamp(11px, 2vh, 20px) * var(--font-scale));
+}
+.glass-drive span { color: var(--text-muted); }
+.glass-drive .glass-bar { margin: 0; }
+.glass-drive b { font-weight: 650; font-variant-numeric: tabular-nums; }
+
+body.square-style .glass-card { border-radius: 0; }

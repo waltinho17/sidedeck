@@ -1,0 +1,25 @@
+# Build output
+pc-monitor-host/node_modules/
+pc-monitor-host/src-tauri/target/
+pc-monitor-host/src-tauri/gen/schemas/
+android-kiosk/.gradle/
+android-kiosk/app/build/
+android-kiosk/build/
+android-kiosk/local.properties
+*.log
+
+# Editors and OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.claude/
+.DS_Store
+Thumbs.db
+
+# Personal reference screenshots and notes (not part of the project)
+/aida*.png
+/full*.png
+/min*.png
+/modelo*.png
+/projeto.md
+android-kiosk/kiosk_test2.png

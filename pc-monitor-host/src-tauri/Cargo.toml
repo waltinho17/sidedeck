@@ -1,0 +1,42 @@
+[package]
+name = "pc-monitor-host"
+version = "0.1.0"
+description = "PC Monitor Host"
+authors = ["you"]
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+# The `_lib` suffix may seem redundant but it is necessary
+# to make the lib name unique and wouldn't conflict with the bin name.
+# This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
+name = "tauri_app_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon"] }
+tauri-plugin-opener = "2"
+tauri-plugin-single-instance = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["rt-multi-thread", "net", "time", "macros", "sync", "io-util", "fs"] }
+tokio-tungstenite = "0.24"
+futures-util = "0.3"
+sysinfo = "0.32"
+nvml-wrapper = "0.10"
+
+[target.'cfg(windows)'.dependencies]
+windows = { version = "0.58", features = ["Win32_Foundation", "Win32_System_Memory", "Win32_System_Performance", "Win32_Graphics_Dxgi", "Wdk_Graphics_Direct3D", "Win32_Globalization", "Win32_System_SystemInformation", "Win32_Devices_DeviceAndDriverInstallation"] }
+
+
+# Read the optimization guideline for more details: https://tauri.app/concept/size/#cargo-configuration
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = 3
+panic = "abort"
+strip = true

@@ -1,0 +1,783 @@
+<!doctype html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="fonts.css" />
+    <link rel="stylesheet" href="settings.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SideDeck</title>
+    <script type="module" src="/settings.js" defer></script>
+  </head>
+
+  <!-- Text comes from i18n.js (data-i18n* attributes); the Portuguese kept
+       here is only what shows before the script runs. -->
+  <body>
+    <div class="app">
+      <nav class="sidebar">
+        <div class="brand">
+          <img class="brand-logo" src="assets/sidedeck-icon.svg" alt="" />
+          <div>
+            <div class="brand-title">SideDeck</div>
+            <div class="brand-sub" data-i18n="brand.sub">Monitor no celular</div>
+          </div>
+        </div>
+        <button class="nav-item active" data-tab="general" type="button">
+          <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9L17 7M7 17l-2.1 2.1"/><circle cx="12" cy="12" r="4"/></svg></span>
+          <span data-i18n="nav.general">Geral</span>
+        </button>
+        <button class="nav-item" data-tab="models" type="button">
+          <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M6 13h2.5l1.5-3.5 2.5 6 1.5-4 1 1.5H18"/></svg></span>
+          <span data-i18n="nav.models">Modelos</span>
+        </button>
+        <button class="nav-item" data-tab="layout" type="button">
+          <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></span>
+          <span data-i18n="nav.layout">Layout</span>
+        </button>
+        <button class="nav-item" data-tab="appearance" type="button">
+          <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18 4.5 4.5 0 0 0 0-9 4.5 4.5 0 0 1 0-9z"/></svg></span>
+          <span data-i18n="nav.appearance">Aparência</span>
+        </button>
+        <button class="nav-item" data-tab="cards" type="button">
+          <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="3" y="4" width="8" height="7" rx="1.5"/><rect x="13" y="4" width="8" height="7" rx="1.5"/><rect x="3" y="13" width="18" height="7" rx="1.5"/></svg></span>
+          <span data-i18n="nav.cards">Cards</span>
+        </button>
+        <button class="nav-item" data-tab="video" type="button">
+          <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="2.5" y="5" width="19" height="14" rx="2"/><path d="M10 9.5l5 2.5-5 2.5z"/></svg></span>
+          <span data-i18n="nav.video">Vídeo</span>
+        </button>
+
+        <div class="sidebar-footer">
+          <button id="preview-btn" type="button" class="ghost-btn" data-i18n="sidebar.preview">Abrir preview</button>
+          <p class="sidebar-hint" data-i18n="sidebar.previewHint">Abre o painel no navegador</p>
+          <label class="lang-picker" data-i18n-title="lang.title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/></svg>
+            <select id="language-select" class="select-input">
+              <option value="auto" data-i18n="lang.auto">Automático</option>
+              <option value="pt-BR">Português (Brasil)</option>
+              <option value="en">English</option>
+            </select>
+          </label>
+        </div>
+      </nav>
+
+      <main class="content">
+        <!-- Offered as soon as the app opens when a phone without the panel is plugged in. -->
+        <div class="install-banner" id="install-banner" hidden>
+          <div class="install-banner-text">
+            <strong data-i18n="banner.title">Celular conectado sem o app do painel</strong>
+            <span id="install-banner-model"></span>
+          </div>
+          <button type="button" class="ghost-btn" id="install-banner-dismiss" data-i18n="banner.dismiss">Agora não</button>
+          <button type="button" class="primary" id="install-banner-btn" data-i18n="banner.install">Instalar no celular</button>
+        </div>
+
+        <!-- ============ GERAL ============ -->
+        <section class="tab-panel" data-panel="general">
+          <header class="panel-head">
+            <h1 data-i18n="nav.general">Geral</h1>
+            <p data-i18n="general.sub">Conexão com o celular e ritmo de atualização dos dados.</p>
+          </header>
+
+          <div class="block">
+            <div class="block-head">
+              <h2 data-i18n="phone.title">Celular</h2>
+              <p class="hint" data-i18n-html="phone.hint">Conecte pelo cabo USB com a <b>Depuração USB</b> ligada (Configurações › Opções do desenvolvedor).</p>
+            </div>
+            <div class="status-row">
+              <span class="status-dot" id="phone-dot"></span>
+              <span class="status-text" id="phone-status-text" data-i18n="phone.searching">Procurando celular...</span>
+            </div>
+            <div class="status-row">
+              <span class="status-dot" id="app-dot"></span>
+              <span class="status-text" id="app-status-text">—</span>
+              <button id="install-app-btn" type="button" hidden data-i18n="app.install">Instalar app</button>
+            </div>
+            <div class="status-row">
+              <span class="status-dot" id="adb-dot"></span>
+              <span class="status-text" id="adb-status-text" data-i18n="adb.checking">Verificando...</span>
+              <button id="reconnect-btn" type="button" data-i18n="adb.reconnect">Reconectar</button>
+            </div>
+            <p class="hint" id="reconnect-result"></p>
+
+            <details class="manual-install" id="setup-guide">
+              <summary data-i18n="guide.title">Primeira vez? Como preparar o celular</summary>
+              <ol class="hint manual-steps">
+                <li data-i18n-html="guide.step1"></li>
+                <li data-i18n-html="guide.step2"></li>
+                <li data-i18n-html="guide.step3"></li>
+                <li data-i18n-html="guide.step4"></li>
+                <li data-i18n-html="guide.step5"></li>
+              </ol>
+            </details>
+
+            <details class="manual-install" id="manual-install">
+              <summary data-i18n="manual.title">Problemas para instalar pelo cabo?</summary>
+              <p class="hint" data-i18n="manual.intro">Alguns celulares bloqueiam a instalação pelo USB. Nesse caso, instale o app manualmente:</p>
+              <ol class="hint manual-steps">
+                <li data-i18n-html="manual.step1"></li>
+                <li data-i18n-html="manual.step2"></li>
+              </ol>
+              <p class="hint" data-i18n-html="manual.unknownApps"></p>
+              <div class="manual-actions">
+                <button type="button" id="copy-apk-btn" data-i18n="manual.copy">Copiar para o celular</button>
+                <button type="button" id="reveal-apk-btn" data-i18n="manual.reveal">Abrir pasta do instalador</button>
+              </div>
+              <p class="hint" id="manual-status"></p>
+            </details>
+          </div>
+
+          <div class="block">
+            <div class="block-head">
+              <h2 data-i18n="auto.title">Funcionamento automático</h2>
+              <p class="hint" data-i18n="auto.hint">Para deixar um celular fixo dentro do PC, como uma telinha, funcionando sem precisar tocar nele.</p>
+            </div>
+            <div class="field">
+              <label class="switch">
+                <input type="checkbox" id="autostart" />
+                <span data-i18n="auto.startup">Iniciar o SideDeck junto com o Windows</span>
+              </label>
+              <p class="hint field-hint" data-i18n="auto.startupHint">Abre escondido, só no ícone perto do relógio. Vale na hora, sem precisar salvar.</p>
+            </div>
+            <div class="field">
+              <label class="switch">
+                <input type="checkbox" id="dedicated-screen" />
+                <span data-i18n="auto.dedicated">Tela dedicada (celular fixo no PC)</span>
+              </label>
+              <p class="hint field-hint" id="dedicated-hint" data-i18n="auto.dedicatedHint"></p>
+            </div>
+            <details class="manual-install">
+              <summary data-i18n="tips.title">Dicas para deixar um celular fixo dentro do PC</summary>
+              <ol class="hint manual-steps">
+                <li data-i18n-html="tips.step1"></li>
+                <li data-i18n-html="tips.step2"></li>
+                <li data-i18n-html="tips.step3"></li>
+                <li data-i18n-html="tips.step4"></li>
+                <li data-i18n-html="tips.step5"></li>
+                <li data-i18n-html="tips.step6"></li>
+              </ol>
+            </details>
+          </div>
+
+          <div class="block">
+            <div class="block-head">
+              <h2 data-i18n="update.title">Atualização de dados</h2>
+              <p class="hint" data-i18n="update.hint">Com que frequência os sensores são lidos e enviados ao celular.</p>
+            </div>
+            <div class="slider-row">
+              <input type="range" id="update-interval" min="250" max="3000" step="250" />
+              <span id="update-interval-value" class="slider-value">1000 ms</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ MODELOS ============ -->
+        <section class="tab-panel" data-panel="models" hidden>
+          <header class="panel-head">
+            <h1 data-i18n="nav.models">Modelos</h1>
+            <p data-i18n="models.sub">Escolha o visual do painel. Clique num modelo para ver como ele fica antes de usar.</p>
+          </header>
+
+          <p class="hint models-tip" data-i18n="models.tip">Dica: clique duas vezes num modelo para usar direto.</p>
+          <div class="model-grid" id="model-grid">
+            <button type="button" class="model-card" data-model="full">
+              <img src="assets/previews/full.png" alt="" />
+              <span class="model-card-name" data-i18n="model.full">Completo</span>
+            </button>
+            <button type="button" class="model-card" data-model="minimal">
+              <img src="assets/previews/minimal.png" alt="" />
+              <span class="model-card-name" data-i18n="model.minimal">Minimalista</span>
+            </button>
+            <button type="button" class="model-card" data-model="aida">
+              <img src="assets/previews/aida.png" alt="" />
+              <span class="model-card-name" data-i18n="model.aida">Gráficos</span>
+            </button>
+            <button type="button" class="model-card" data-model="temps">
+              <img src="assets/previews/temps.png" alt="" />
+              <span class="model-card-name" data-i18n="model.temps">Temperaturas</span>
+            </button>
+            <button type="button" class="model-card" data-model="glass">
+              <img src="assets/previews/glass.png" alt="" />
+              <span class="model-card-name" data-i18n="model.glass">Vidro</span>
+            </button>
+          </div>
+          <div class="block model-stage">
+            <div class="model-stage-screen">
+              <img id="model-stage-img" src="assets/previews/full.png" alt="" />
+            </div>
+            <div class="model-stage-info">
+              <div class="model-stage-title">
+                <h2 id="model-stage-name">Completo</h2>
+                <span class="model-in-use" id="model-in-use" data-i18n="models.inUse">Em uso</span>
+              </div>
+              <p class="hint" id="model-stage-desc"></p>
+              <div class="model-stage-actions">
+                <button type="button" class="primary" id="model-use-btn" data-i18n="models.use">Usar este modelo</button>
+                <button type="button" id="model-phone-btn" data-i18n="models.tryPhone">Ver no celular por 15 s</button>
+                <button type="button" class="ghost-btn" id="model-live-btn" data-i18n="models.live">Abrir no navegador</button>
+              </div>
+              <p class="hint" id="model-stage-status"></p>
+            </div>
+          </div>
+
+          <p class="hint models-footnote" data-i18n-html="models.footnote"></p>
+        </section>
+
+        <!-- ============ LAYOUT ============ -->
+        <section class="tab-panel" data-panel="layout" hidden>
+          <header class="panel-head">
+            <h1 data-i18n="nav.layout">Layout</h1>
+            <p data-i18n="layout.sub">Barra superior, unidades e proporções dos elementos.</p>
+            <div class="model-scope">
+              <span data-i18n="scope.editing">Editando o modelo</span>
+              <strong class="model-badge">Completo</strong>
+              <button type="button" class="ghost-btn tiny" id="copy-model-1" data-i18n="scope.copy">Copiar para os outros</button>
+            </div>
+          </header>
+
+          <div class="block" data-models="minimal">
+            <div class="block-head">
+              <h2 data-i18n="sensors.title">Sensores</h2>
+              <p class="hint" data-i18n="sensors.gridHint">Do jeito que aparece no celular. Arraste um anel para mudar a posição; clique no × para tirar.</p>
+            </div>
+            <div class="mini-editor-screen">
+              <div class="mini-editor" id="mini-editor"></div>
+            </div>
+            <div class="mini-add">
+              <span class="mini-add-label" data-i18n="sensors.add">Adicionar:</span>
+              <div class="mini-chips" id="mini-chips"></div>
+            </div>
+          </div>
+
+          <div class="block" data-models="full">
+            <div class="block-head">
+              <h2 data-i18n="cardInfo.title">Informações dos cards</h2>
+              <p class="hint" data-i18n="cardInfo.hint">O que aparece ao lado do anel de uso da CPU e da GPU. Até 4 em cada card.</p>
+            </div>
+            <div class="sensor-columns">
+              <div>
+                <h3 class="sensor-title">CPU</h3>
+                <div class="sensor-list" id="cpu-stat-list"></div>
+              </div>
+              <div>
+                <h3 class="sensor-title">GPU</h3>
+                <div class="sensor-list" id="gpu-stat-list"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="block" id="temps-layout-block" data-models="temps">
+            <div class="block-head">
+              <h2 data-i18n="temps.title">Modelo Temperaturas</h2>
+              <p class="hint" data-i18n="temps.hint">Posição e tamanho das duas leituras.</p>
+            </div>
+
+            <div class="field">
+              <label data-i18n="temps.style">Estilo</label>
+              <div class="segmented compact" id="seg-temps-style">
+                <button type="button" class="seg-option" data-value="numbers" data-i18n="temps.styleNumbers">Números</button>
+                <button type="button" class="seg-option" data-value="rings" data-i18n="temps.styleRings">Anéis com degradê</button>
+              </div>
+            </div>
+
+            <div class="field">
+              <label data-i18n="temps.caption">Legenda CPU / GPU</label>
+              <div class="segmented compact" id="seg-temps-caption">
+                <button type="button" class="seg-option" data-value="above" data-i18n="temps.captionAbove">Em cima</button>
+                <button type="button" class="seg-option" data-value="below" data-i18n="temps.captionBelow">Embaixo</button>
+                <button type="button" class="seg-option" data-value="side" data-i18n="temps.captionSide">Ao lado</button>
+                <button type="button" class="seg-option" data-value="none" data-i18n="temps.captionNone">Sem legenda</button>
+              </div>
+              <p class="hint field-hint" data-i18n="temps.captionHint">No estilo Anéis, a legenda fica dentro do anel.</p>
+            </div>
+
+            <div class="field">
+              <label data-i18n="temps.layout">Disposição</label>
+              <div class="segmented compact" id="seg-temps-layout">
+                <button type="button" class="seg-option" data-value="row" data-i18n="temps.row">Lado a lado</button>
+                <button type="button" class="seg-option" data-value="column" data-i18n="temps.column">Uma embaixo da outra</button>
+              </div>
+            </div>
+
+            <div class="field">
+              <label data-i18n="temps.align">Posição horizontal</label>
+              <div class="segmented compact" id="seg-temps-align">
+                <button type="button" class="seg-option" data-value="left" data-i18n="pos.left">Esquerda</button>
+                <button type="button" class="seg-option" data-value="center" data-i18n="pos.center">Centro</button>
+                <button type="button" class="seg-option" data-value="right" data-i18n="pos.right">Direita</button>
+              </div>
+            </div>
+
+            <div class="field">
+              <label data-i18n="temps.valign">Posição vertical</label>
+              <div class="segmented compact" id="seg-temps-valign">
+                <button type="button" class="seg-option" data-value="top" data-i18n="pos.top">Em cima</button>
+                <button type="button" class="seg-option" data-value="center" data-i18n="pos.middle">No meio</button>
+                <button type="button" class="seg-option" data-value="bottom" data-i18n="pos.bottom">Embaixo</button>
+              </div>
+            </div>
+
+            <div class="field">
+              <label data-i18n="temps.order">Ordem</label>
+              <div class="segmented compact" id="seg-temps-order">
+                <button type="button" class="seg-option" data-value="cpu-top" data-i18n="temps.cpuFirst">CPU primeiro</button>
+                <button type="button" class="seg-option" data-value="gpu-top" data-i18n="temps.gpuFirst">GPU primeiro</button>
+              </div>
+              <p class="hint field-hint" data-i18n="temps.orderHint">A primeira fica à esquerda (lado a lado) ou em cima (uma embaixo da outra).</p>
+            </div>
+
+            <div class="field">
+              <label data-i18n="temps.spacing">Distribuição</label>
+              <div class="segmented compact" id="seg-temps-spacing">
+                <button type="button" class="seg-option" data-value="together" data-i18n="temps.together">Juntas</button>
+                <button type="button" class="seg-option" data-value="spread" data-i18n="temps.spread">Afastadas, nas bordas opostas</button>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="temps-cpu-scale" data-i18n="temps.cpuScale">Tamanho da CPU</label>
+              <div class="slider-row">
+                <input type="range" id="temps-cpu-scale" min="0.4" max="1.6" step="0.05" />
+                <span id="temps-cpu-scale-value" class="slider-value">100%</span>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="temps-gpu-scale" data-i18n="temps.gpuScale">Tamanho da GPU</label>
+              <div class="slider-row">
+                <input type="range" id="temps-gpu-scale" min="0.4" max="3" step="0.05" />
+                <span id="temps-gpu-scale-value" class="slider-value">100%</span>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="temps-margin" data-i18n="temps.margin">Distância das bordas</label>
+              <div class="slider-row">
+                <input type="range" id="temps-margin" min="0" max="2" step="0.05" />
+                <span id="temps-margin-value" class="slider-value">100%</span>
+              </div>
+            </div>
+
+            <div class="field">
+              <label data-i18n="temps.details">Detalhes</label>
+              <div class="field-control">
+                <label class="switch"><input type="checkbox" id="temps-show-unit" /><span data-i18n="temps.unit">Unidade °C</span></label>
+              </div>
+            </div>
+          </div>
+
+          <div class="block" data-models="glass">
+            <div class="block-head">
+              <h2 data-i18n="glass.title">Modelo Vidro</h2>
+              <p class="hint" data-i18n="glass.hint">Fica ainda mais bonito com um vídeo em Vídeo › Sempre no fundo. Se o painel ficar lento num celular mais fraco, diminua o desfoque.</p>
+            </div>
+            <div class="field">
+              <label for="glass-blur" data-i18n="glass.blur">Desfoque</label>
+              <div class="slider-row">
+                <input type="range" id="glass-blur" min="0" max="2" step="0.1" />
+                <span id="glass-blur-value" class="slider-value">100%</span>
+              </div>
+            </div>
+            <div class="field">
+              <label for="glass-opacity" data-i18n="glass.opacity">Vidro fosco</label>
+              <div class="slider-row">
+                <input type="range" id="glass-opacity" min="0" max="1" step="0.05" />
+                <span id="glass-opacity-value" class="slider-value">35%</span>
+              </div>
+            </div>
+            <div class="field">
+              <label class="switch">
+                <input type="checkbox" id="glass-animated-bg" />
+                <span data-i18n="glass.animated">Fundo colorido em movimento (quando não há vídeo)</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="block">
+            <div class="block-head">
+              <h2 data-i18n="topbar.title">Barra superior</h2>
+            </div>
+
+            <div class="field">
+              <label for="brand-text-input" data-i18n="topbar.brandText">Texto do título</label>
+              <div class="field-control">
+                <input type="text" id="brand-text-input" class="text-input" data-i18n-placeholder="topbar.brandPlaceholder" placeholder="ex: SideDeck" />
+                <label class="switch">
+                  <input type="checkbox" id="show-brand" />
+                  <span data-i18n="common.show">Mostrar</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="field">
+              <label data-i18n="topbar.clock">Hora</label>
+              <label class="switch">
+                <input type="checkbox" id="show-clock" />
+                <span data-i18n="topbar.clockSwitch">Mostrar a hora</span>
+              </label>
+              <p class="hint field-hint" data-i18n="topbar.emptyHint">Com título, hora, FPS e ícone desligados, a barra some e o painel ganha a tela inteira.</p>
+            </div>
+
+            <div class="field">
+              <label data-i18n="topbar.clockFormat">Formato da hora</label>
+              <div class="segmented compact" id="seg-clock-format">
+                <button type="button" class="seg-option" data-value="24h">24h &middot; 22:59</button>
+                <button type="button" class="seg-option" data-value="12h">12h &middot; 10:59 PM</button>
+              </div>
+            </div>
+
+            <div class="field">
+              <label data-i18n="topbar.clockPosition">Posição da hora</label>
+              <div class="segmented compact" id="seg-clock-position">
+                <button type="button" class="seg-option" data-value="left" data-i18n="pos.left">Esquerda</button>
+                <button type="button" class="seg-option" data-value="center" data-i18n="pos.center">Centro</button>
+                <button type="button" class="seg-option" data-value="right" data-i18n="pos.right">Direita</button>
+              </div>
+            </div>
+
+            <div class="field">
+              <label data-i18n="topbar.cornerIcon">Ícone do canto</label>
+              <label class="switch">
+                <input type="checkbox" id="show-corner-icon" />
+                <span data-i18n="topbar.cornerIconSwitch">Mostrar ícone no canto superior direito</span>
+              </label>
+            </div>
+
+            <div class="field">
+              <label data-i18n="topbar.fps">Contador de FPS</label>
+              <label class="switch">
+                <input type="checkbox" id="show-fps" />
+                <span data-i18n="topbar.fpsSwitch">Mostrar FPS no canto superior direito</span>
+              </label>
+              <p class="hint field-hint" data-i18n="topbar.fpsHint"></p>
+            </div>
+
+            <div class="field">
+              <label for="fps-scale" data-i18n="topbar.fpsScale">Tamanho do FPS</label>
+              <div class="slider-row">
+                <input type="range" id="fps-scale" min="0.6" max="3" step="0.1" />
+                <span id="fps-scale-value" class="slider-value">100%</span>
+              </div>
+            </div>
+          </div>
+
+          <div data-models="full minimal aida glass" class="block">
+            <div class="block-head">
+              <h2 data-i18n="units.title">Unidades</h2>
+            </div>
+
+            <div class="field">
+              <label data-i18n="units.freq">Frequência</label>
+              <div class="segmented compact" id="seg-freq-unit">
+                <button type="button" class="seg-option" data-value="mhz">3501 MHz</button>
+                <button type="button" class="seg-option" data-value="ghz" data-i18n="units.ghzSample">3,50 GHz</button>
+              </div>
+            </div>
+
+            <div data-models="full glass" class="field">
+              <label data-i18n="units.mem">Memória</label>
+              <div class="segmented compact" id="seg-mem-unit">
+                <button type="button" class="seg-option" data-value="mb">9985 MB</button>
+                <button type="button" class="seg-option" data-value="gb" data-i18n="units.gbSample">9,8 GB</button>
+              </div>
+            </div>
+          </div>
+
+          <div data-models="full minimal aida temps glass" class="block">
+            <div class="block-head">
+              <h2 data-i18n="prop.title">Proporções</h2>
+              <p class="hint" data-i18n="prop.hint">Espessura dos gráficos e arredondamento dos cantos.</p>
+            </div>
+
+            <div data-models="full aida glass" class="field">
+              <label for="bar-thickness" data-i18n="prop.bar">Espessura das barras</label>
+              <div class="slider-row">
+                <input type="range" id="bar-thickness" min="0.6" max="3" step="0.1" />
+                <span id="bar-thickness-value" class="slider-value">100%</span>
+              </div>
+            </div>
+
+            <div data-models="full minimal aida temps glass" class="field">
+              <label for="ring-thickness" data-i18n="prop.ring">Espessura dos anéis</label>
+              <div class="slider-row">
+                <input type="range" id="ring-thickness" min="0.6" max="2.5" step="0.1" />
+                <span id="ring-thickness-value" class="slider-value">100%</span>
+              </div>
+            </div>
+
+            <div data-models="full aida glass" class="field">
+              <label for="icon-scale" data-i18n="prop.icons">Tamanho dos ícones</label>
+              <div class="slider-row">
+                <input type="range" id="icon-scale" min="0.6" max="2" step="0.1" />
+                <span id="icon-scale-value" class="slider-value">100%</span>
+              </div>
+            </div>
+
+            <div data-models="full minimal aida glass" class="field">
+              <label data-i18n="prop.corners">Cantos</label>
+              <div class="segmented compact" id="seg-corner-radius">
+                <button type="button" class="seg-option" data-value="0" data-i18n="prop.square">Quadrado</button>
+                <button type="button" class="seg-option" data-value="6" data-i18n="prop.slight">Leve</button>
+                <button type="button" class="seg-option" data-value="12" data-i18n="prop.rounded">Arredondado</button>
+                <button type="button" class="seg-option" data-value="22" data-i18n="prop.veryRounded">Bem redondo</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ APARÊNCIA ============ -->
+        <section class="tab-panel" data-panel="appearance" hidden>
+          <header class="panel-head">
+            <h1 data-i18n="nav.appearance">Aparência</h1>
+            <p data-i18n="appearance.sub">Cores e escala geral do painel.</p>
+            <div class="model-scope">
+              <span data-i18n="scope.editing">Editando o modelo</span>
+              <strong class="model-badge">Completo</strong>
+              <button type="button" class="ghost-btn tiny" id="copy-model-2" data-i18n="scope.copy">Copiar para os outros</button>
+            </div>
+          </header>
+
+          <div class="block">
+            <div class="block-head">
+              <h2 data-i18n="presets.title">Predefinições</h2>
+            </div>
+            <div class="preset-row">
+              <button type="button" class="preset-btn" data-preset="orange">
+                <span class="preset-dots"><i style="background:#ff7a1a"></i><i style="background:#111111"></i></span>
+                <span data-i18n="preset.orange">Laranja</span>
+              </button>
+              <button type="button" class="preset-btn" data-preset="pink">
+                <span class="preset-dots"><i style="background:#ff2d78"></i><i style="background:#00e0ff"></i></span>
+                <span data-i18n="preset.pink">Pink / Ciano</span>
+              </button>
+              <button type="button" class="preset-btn" data-preset="red">
+                <span class="preset-dots"><i style="background:#e6231e"></i><i style="background:#0f0f0f"></i></span>
+                <span>Raiden Red</span>
+              </button>
+              <button type="button" class="preset-btn" data-preset="purple">
+                <span class="preset-dots"><i style="background:#8b2fd9"></i><i style="background:#ff3fa4"></i></span>
+                <span data-i18n="preset.purple">Roxo / Rosa</span>
+              </button>
+              <button type="button" class="preset-btn" data-preset="green">
+                <span class="preset-dots"><i style="background:#2fe06a"></i><i style="background:#9fff5e"></i></span>
+                <span data-i18n="preset.green">Verde Neon</span>
+              </button>
+              <button type="button" class="preset-btn" data-preset="blue">
+                <span class="preset-dots"><i style="background:#2f7dff"></i><i style="background:#00d4ff"></i></span>
+                <span data-i18n="preset.blue">Azul Elétrico</span>
+              </button>
+              <button type="button" class="preset-btn" data-preset="teal">
+                <span class="preset-dots"><i style="background:#14d1c4"></i><i style="background:#4affd0"></i></span>
+                <span data-i18n="preset.teal">Turquesa</span>
+              </button>
+              <button type="button" class="preset-btn" data-preset="amber">
+                <span class="preset-dots"><i style="background:#ffb020"></i><i style="background:#ff7a1a"></i></span>
+                <span data-i18n="preset.amber">Âmbar</span>
+              </button>
+              <button type="button" class="preset-btn" data-preset="ice">
+                <span class="preset-dots"><i style="background:#7fc8ff"></i><i style="background:#c9e8ff"></i></span>
+                <span data-i18n="preset.ice">Gelo</span>
+              </button>
+              <button type="button" class="preset-btn" data-preset="mono">
+                <span class="preset-dots"><i style="background:#e4e4e4"></i><i style="background:#9a9a9a"></i></span>
+                <span data-i18n="preset.mono">Monocromático</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="block">
+            <div class="block-head">
+              <h2 data-i18n="colors.title">Cores</h2>
+            </div>
+            <div class="color-grid">
+              <label class="color-field">
+                <span data-i18n="colors.bg">Fundo</span>
+                <input type="color" id="color-bg" />
+              </label>
+              <label data-models="full aida" class="color-field">
+                <span data-i18n="colors.card">Fundo do card</span>
+                <input type="color" id="color-card" />
+              </label>
+              <label class="color-field">
+                <span data-i18n="colors.text">Texto</span>
+                <input type="color" id="color-text" />
+              </label>
+              <label class="color-field">
+                <span data-i18n="colors.muted">Texto secundário</span>
+                <input type="color" id="color-muted" />
+              </label>
+              <label class="color-field">
+                <span data-i18n="colors.accent">Destaque</span>
+                <input type="color" id="color-accent" />
+              </label>
+              <label data-models="minimal temps glass" class="color-field">
+                <span data-i18n="colors.accent2">Destaque 2 (gradiente)</span>
+                <input type="color" id="color-accent-2" />
+              </label>
+            </div>
+          </div>
+
+          <div class="block">
+            <div class="block-head">
+              <h2 data-i18n="font.title">Fonte</h2>
+            </div>
+            <div class="segmented font-grid" id="seg-font-family">
+              <button type="button" class="seg-option" data-value="system" style="font-family:'Segoe UI', Roboto, sans-serif"><span data-i18n="font.system">Sistema</span><small>CPU 54°C</small></button>
+              <button type="button" class="seg-option" data-value="inter" style="font-family:'Inter'">Inter<small>CPU 54°C</small></button>
+              <button type="button" class="seg-option" data-value="rajdhani" style="font-family:'Rajdhani'">Rajdhani<small>CPU 54°C</small></button>
+              <button type="button" class="seg-option" data-value="orbitron" style="font-family:'Orbitron'">Orbitron<small>CPU 54°C</small></button>
+              <button type="button" class="seg-option" data-value="exo2" style="font-family:'Exo 2'">Exo 2<small>CPU 54°C</small></button>
+              <button type="button" class="seg-option" data-value="chakra" style="font-family:'Chakra Petch'">Chakra Petch<small>CPU 54°C</small></button>
+              <button type="button" class="seg-option" data-value="oxanium" style="font-family:'Oxanium'">Oxanium<small>CPU 54°C</small></button>
+            </div>
+          </div>
+
+          <div class="block">
+            <div class="block-head">
+              <h2 data-i18n="scale.title">Escala</h2>
+              <p class="hint" data-i18n="scale.hint">O tamanho da fonte escala tudo junto: textos, anéis, barras e ícones.</p>
+            </div>
+            <div class="field">
+              <label for="font-scale" data-i18n="scale.size">Tamanho geral</label>
+              <div class="slider-row">
+                <input type="range" id="font-scale" min="0.7" max="1.8" step="0.05" />
+                <span id="font-scale-value" class="slider-value">100%</span>
+              </div>
+            </div>
+            <div class="field">
+              <label for="density" data-i18n="scale.density">Espaçamento</label>
+              <div class="slider-row">
+                <input type="range" id="density" min="0.6" max="1.5" step="0.05" />
+                <span id="density-value" class="slider-value">100%</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ CARDS ============ -->
+        <section class="tab-panel" data-panel="cards" hidden>
+          <header class="panel-head">
+            <h1 data-i18n="nav.cards">Cards</h1>
+            <p data-i18n="cards.sub">Escolha o que aparece no painel do celular.</p>
+          </header>
+
+          <div class="block" data-models="minimal aida temps glass">
+            <p class="hint" data-i18n-html="cards.onlyFull"></p>
+          </div>
+
+          <div class="block" data-models="full">
+            <div class="card-toggle-list">
+              <label class="card-toggle"><input type="checkbox" id="card-cpu" /><span>CPU</span></label>
+              <label class="card-toggle"><input type="checkbox" id="card-gpu" /><span>GPU</span></label>
+              <label class="card-toggle"><input type="checkbox" id="card-ram" /><span>RAM</span></label>
+              <label class="card-toggle"><input type="checkbox" id="card-network" /><span data-i18n="cards.network">Rede</span></label>
+              <label class="card-toggle"><input type="checkbox" id="card-storage" /><span data-i18n="cards.storage">Armazenamento</span></label>
+            </div>
+          </div>
+
+          <div class="block">
+            <div class="block-head">
+              <h2 data-i18n="names.title">Nomes dos dispositivos</h2>
+              <p class="hint" data-i18n="names.hint">Troque o nome que aparece no painel. Deixe em branco para usar o nome detectado. Vale para todos os modelos.</p>
+            </div>
+            <div class="field">
+              <label for="label-cpu" data-i18n="names.cpu">Processador</label>
+              <input type="text" id="label-cpu" class="text-input" />
+            </div>
+            <div class="field">
+              <label for="label-gpu" data-i18n="names.gpu">Placa de vídeo</label>
+              <input type="text" id="label-gpu" class="text-input" />
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ VÍDEO ============ -->
+        <section class="tab-panel" data-panel="video" hidden>
+          <header class="panel-head">
+            <h1 data-i18n="nav.video">Vídeo</h1>
+            <p data-i18n="video.sub">Fundo animado ou descanso de tela.</p>
+          </header>
+
+          <div class="block">
+            <div class="block-head">
+              <h2 data-i18n="video.mode">Modo</h2>
+            </div>
+            <div class="segmented" id="seg-screensaver-mode">
+              <button type="button" class="seg-option" data-value="off" data-i18n="video.off">Desativado</button>
+              <button type="button" class="seg-option" data-value="cycle" data-i18n="video.cycle">Descanso de tela</button>
+              <button type="button" class="seg-option" data-value="always" data-i18n="video.always">Sempre no fundo</button>
+            </div>
+          </div>
+
+          <div class="block" id="overlay-block">
+            <div class="block-head">
+              <h2 data-i18n="video.overlay">Escurecimento do vídeo</h2>
+              <p class="hint" data-i18n="video.overlayHint">Quanto o vídeo fica escurecido atrás do painel, para os números aparecerem melhor. 0% mostra o vídeo sem escurecer.</p>
+            </div>
+            <div class="slider-row">
+              <input type="range" id="video-overlay" min="0" max="0.9" step="0.05" />
+              <span id="video-overlay-value" class="slider-value">35%</span>
+            </div>
+          </div>
+
+          <div class="block" id="cycle-timing-block">
+            <div class="block-head">
+              <h2 data-i18n="video.cycleTitle">Ciclo</h2>
+              <p class="hint" data-i18n="video.cycleHint">De quanto em quanto tempo o vídeo entra, e por quanto tempo fica.</p>
+            </div>
+            <div class="field inline">
+              <label for="screensaver-interval" data-i18n="video.every">A cada</label>
+              <select id="screensaver-interval" class="select-input"></select>
+            </div>
+            <div class="field inline">
+              <label for="screensaver-duration" data-i18n="video.stay">Ficar por</label>
+              <select id="screensaver-duration" class="select-input"></select>
+            </div>
+          </div>
+
+          <div class="block" id="ss-temps-block">
+            <div class="block-head">
+              <h2 data-i18n="video.tempsTitle">Temperaturas no descanso</h2>
+              <p class="hint" data-i18n="video.tempsHint">Mostra CPU e GPU discretamente num canto enquanto o vídeo está na tela.</p>
+            </div>
+            <div class="field">
+              <label class="switch">
+                <input type="checkbox" id="ss-show-temps" />
+                <span data-i18n="video.tempsSwitch">Mostrar temperaturas sobre o vídeo</span>
+              </label>
+            </div>
+            <div class="field">
+              <label data-i18n="video.corner">Canto</label>
+              <div class="segmented compact" id="seg-temps-corner">
+                <button type="button" class="seg-option" data-value="top-left" data-i18n="corner.tl">Sup. esquerdo</button>
+                <button type="button" class="seg-option" data-value="top-right" data-i18n="corner.tr">Sup. direito</button>
+                <button type="button" class="seg-option" data-value="bottom-left" data-i18n="corner.bl">Inf. esquerdo</button>
+                <button type="button" class="seg-option" data-value="bottom-right" data-i18n="corner.br">Inf. direito</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="block">
+            <div class="block-head block-head-row">
+              <div>
+                <h2 data-i18n="video.gallery">Vídeo</h2>
+                <p class="hint" data-i18n="video.galleryHint">Passe o mouse sobre um vídeo para ver ele rodando.</p>
+                <p class="hint" data-i18n="video.limits">Até 80 MB e resolução até 1920×1080 (Full HD), em .webm ou .mp4.</p>
+              </div>
+              <button type="button" id="add-video-btn" data-i18n="video.add">+ Adicionar vídeo</button>
+              <input type="file" id="add-video-input" accept=".webm,.mp4,video/webm,video/mp4" multiple hidden />
+            </div>
+            <div class="video-gallery" id="video-gallery"></div>
+            <p class="hint" id="video-upload-status"></p>
+          </div>
+        </section>
+
+      </main>
+    </div>
+
+    <footer class="save-bar">
+      <button id="reset-btn" type="button" class="ghost-btn" data-i18n="save.reset">Restaurar padrões</button>
+      <span id="save-feedback"></span>
+      <button id="save-btn" type="button" class="primary" data-i18n="save.save">Salvar alterações</button>
+    </footer>
+  </body>
+</html>
