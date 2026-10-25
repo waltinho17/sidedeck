@@ -11,12 +11,27 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/waltinho17/sidedeck/releases/latest"><img src="https://img.shields.io/badge/Download-Windows%20installer-ff7a1a?style=for-the-badge" alt="Download the Windows installer" /></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/waltinho17/sidedeck/releases/latest"><img src="https://img.shields.io/github/v/release/waltinho17/sidedeck?color=ff7a1a&label=release" alt="Latest release" /></a>
+  <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6" alt="Windows 10 and 11" />
+  <img src="https://img.shields.io/badge/Android-7.0%2B-3DDC84" alt="Android 7.0 or newer" />
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT license" /></a>
+</p>
+
+<p align="center">
   <b>English</b> · <a href="README.pt-BR.md">Português</a>
 </p>
 
 <p align="center">
   <img src="docs/images/hero.png" alt="SideDeck panel on a phone" />
 </p>
+
+## Why
+
+Screens that show your PC's temperatures — the LCD on some water coolers, the little USB displays made for cases — cost money and do only that. Most people have an old phone in a drawer with a better screen. SideDeck puts it to work: plug it in, pick a look, and it becomes a sensor panel that turns on and off with your PC.
 
 ## Features
 
@@ -74,7 +89,7 @@
 
 ## Getting started
 
-1. **Install SideDeck** — download `SideDeck_x.y.z_x64-setup.exe` from [Releases](../../releases) and run it. Windows may warn about an unknown publisher: click *More info › Run anyway*.
+1. **Install SideDeck** — download `SideDeck_x.y.z_x64-setup.exe` from [Releases](https://github.com/waltinho17/sidedeck/releases/latest) and run it. Windows may warn about an unknown publisher: click *More info › Run anyway*.
 2. **Prepare the phone** — turn on *Developer options* and *USB debugging*. SideDeck shows the exact steps under *First time? How to set up the phone*.
 3. **Plug it in** — tap *Allow* on the phone (check *Always allow from this computer*), then click **Install app** in SideDeck.
 4. **Pick a model** in the *Models* tab, tweak it in *Layout* and *Appearance*, and click **Save changes**. The phone updates live.
@@ -151,7 +166,11 @@ branding/                 Icon sources; videos/make_videos.py generates the defa
 
 ## Credits
 
-Built with [Tauri](https://tauri.app). Uses `adb` from the Android SDK Platform-Tools, [NVML](https://developer.nvidia.com/nvidia-management-library-nvml) through [nvml-wrapper](https://github.com/Cldfire/nvml-wrapper), and fonts from [Google Fonts](https://fonts.google.com) (Open Font License). FPS, CPU temperature and CPU power come from [MSI Afterburner](https://www.msi.com/Landing/afterburner/graphics-cards) when it's installed. The default background videos (Aurora, Waves, Bokeh, Synthwave) are generated from code in `branding/videos` and ship under the same license.
+Built with [Tauri](https://tauri.app). Uses `adb` from the Android SDK Platform-Tools, [NVML](https://developer.nvidia.com/nvidia-management-library-nvml) through [nvml-wrapper](https://github.com/Cldfire/nvml-wrapper), and fonts from [Google Fonts](https://fonts.google.com) ([SIL Open Font License](pc-monitor-host/src/assets/fonts/OFL.txt)). FPS, CPU temperature and CPU power come from [MSI Afterburner](https://www.msi.com/Landing/afterburner/graphics-cards) when it's installed. The default background videos (Aurora, Waves, Bokeh, Synthwave) are generated from code in `branding/videos` and ship under the same license.
+
+## Feedback
+
+Found a bug, or tried SideDeck on hardware not covered above (AMD or Intel GPUs, other phones)? [Open an issue](https://github.com/waltinho17/sidedeck/issues) — for connection problems, attach `%APPDATA%\SideDeck\sidedeck.log`.
 
 ## License
 

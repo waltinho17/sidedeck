@@ -11,12 +11,27 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/waltinho17/sidedeck/releases/latest"><img src="https://img.shields.io/badge/Baixar-instalador%20para%20Windows-ff7a1a?style=for-the-badge" alt="Baixar o instalador para Windows" /></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/waltinho17/sidedeck/releases/latest"><img src="https://img.shields.io/github/v/release/waltinho17/sidedeck?color=ff7a1a&label=vers%C3%A3o" alt="Versão mais recente" /></a>
+  <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6" alt="Windows 10 e 11" />
+  <img src="https://img.shields.io/badge/Android-7.0%2B-3DDC84" alt="Android 7.0 ou mais novo" />
+  <a href="LICENSE"><img src="https://img.shields.io/badge/licen%C3%A7a-MIT-blue" alt="Licença MIT" /></a>
+</p>
+
+<p align="center">
   <a href="README.md">English</a> · <b>Português</b>
 </p>
 
 <p align="center">
   <img src="docs/images/hero.png" alt="Painel do SideDeck num celular" />
 </p>
+
+## Por quê
+
+Telas que mostram as temperaturas do PC — o LCD de alguns water coolers, as telinhas USB feitas para gabinete — custam caro e só fazem isso. Quase todo mundo tem um celular antigo na gaveta com uma tela melhor. O SideDeck dá um uso para ele: conecte no cabo, escolha um visual e ele vira um painel de sensores que liga e desliga junto com o PC.
 
 ## O que ele faz
 
@@ -74,7 +89,7 @@
 
 ## Primeiros passos
 
-1. **Instale o SideDeck** — baixe o `SideDeck_x.y.z_x64-setup.exe` em [Releases](../../releases) e execute. O Windows pode avisar sobre editor desconhecido: clique em *Mais informações › Executar assim mesmo*.
+1. **Instale o SideDeck** — baixe o `SideDeck_x.y.z_x64-setup.exe` em [Releases](https://github.com/waltinho17/sidedeck/releases/latest) e execute. O Windows pode avisar sobre editor desconhecido: clique em *Mais informações › Executar assim mesmo*.
 2. **Prepare o celular** — ligue as *Opções do desenvolvedor* e a *Depuração USB*. O SideDeck mostra o passo a passo em *Primeira vez? Como preparar o celular*.
 3. **Conecte o cabo** — toque em *Permitir* no celular (marque *Sempre permitir deste computador*) e clique em **Instalar app** no SideDeck.
 4. **Escolha um modelo** na aba *Modelos*, ajuste em *Layout* e *Aparência* e clique em **Salvar alterações**. O celular atualiza na hora.
@@ -151,7 +166,11 @@ branding/                 Arquivos do ícone; videos/make_videos.py gera os fund
 
 ## Créditos
 
-Feito com [Tauri](https://tauri.app). Usa o `adb` do Android SDK Platform-Tools, a [NVML](https://developer.nvidia.com/nvidia-management-library-nvml) via [nvml-wrapper](https://github.com/Cldfire/nvml-wrapper) e fontes do [Google Fonts](https://fonts.google.com) (Open Font License). FPS, temperatura e consumo da CPU vêm do [MSI Afterburner](https://www.msi.com/Landing/afterburner/graphics-cards) quando ele está instalado. Os vídeos de fundo padrão (Aurora, Ondas, Bokeh, Synthwave) são gerados por código em `branding/videos` e seguem a mesma licença.
+Feito com [Tauri](https://tauri.app). Usa o `adb` do Android SDK Platform-Tools, a [NVML](https://developer.nvidia.com/nvidia-management-library-nvml) via [nvml-wrapper](https://github.com/Cldfire/nvml-wrapper) e fontes do [Google Fonts](https://fonts.google.com) ([SIL Open Font License](pc-monitor-host/src/assets/fonts/OFL.txt)). FPS, temperatura e consumo da CPU vêm do [MSI Afterburner](https://www.msi.com/Landing/afterburner/graphics-cards) quando ele está instalado. Os vídeos de fundo padrão (Aurora, Ondas, Bokeh, Synthwave) são gerados por código em `branding/videos` e seguem a mesma licença.
+
+## Sugestões e problemas
+
+Achou um bug ou testou o SideDeck num hardware que não aparece acima (placa de vídeo AMD ou Intel, outros celulares)? [Abra uma issue](https://github.com/waltinho17/sidedeck/issues) — em problemas de conexão, anexe o `%APPDATA%\SideDeck\sidedeck.log`.
 
 ## Licença
 

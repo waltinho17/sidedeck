@@ -1,8 +1,10 @@
 [package]
 name = "pc-monitor-host"
-version = "0.1.0"
-description = "PC Monitor Host"
-authors = ["you"]
+version = "1.3.0"
+description = "SideDeck: hardware monitor on your phone screen"
+authors = ["Walter"]
+license = "MIT"
+repository = "https://github.com/waltinho17/sidedeck"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
