@@ -6,7 +6,7 @@ use serde::Serialize;
 use std::time::Instant;
 use sysinfo::{Components, Disks, Networks, System};
 
-use crate::afterburner::{self, source};
+use crate::afterburner::{self, source, OsdItem};
 
 #[derive(Serialize, Clone)]
 pub struct StorageDrive {
@@ -58,6 +58,19 @@ pub struct HardwareSample {
     /// running or Afterburner isn't monitoring it.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub fps: Option<f32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub frametime: Option<f32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fps_avg: Option<f32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fps_1low: Option<f32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fps_01low: Option<f32>,
+
+    /// The sensors ticked for Afterburner's on-screen display (empty when
+    /// Afterburner isn't running), mirrored by the Afterburner model.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub osd: Vec<OsdItem>,
 }
 
 /// GPU values from one source; later sources override or fill fields.
@@ -213,6 +226,9 @@ impl HardwareMonitor {
         // only publishes the sensors enabled in its monitoring config, so every
         // value here stays optional and falls back to the baseline.
         let mut fps = None;
+        // Frametime, average, 1% low, 0.1% low.
+        let mut frame_stats = [None; 4];
+        let mut osd = Vec::new();
         let mut cpu_power = None;
         if let Some(ab) = afterburner::read() {
             if let Some(temp) = ab.find_exact("CPU temperature") {
@@ -220,12 +236,19 @@ impl HardwareMonitor {
             }
             fps = ab.find_exact("Framerate");
             cpu_power = ab.find_exact("CPU power");
+            frame_stats = [
+                ab.find_exact("Frametime"),
+                ab.find_exact("Framerate Avg"),
+                ab.find_exact("Framerate 1% Low"),
+                ab.find_exact("Framerate 0.1% Low"),
+            ];
 
             // Only trust GPU sensors from the same card the panel shows.
             let index = match &self.gpu_adapter {
                 Some(adapter) => ab.gpu_index(adapter.vendor_id, adapter.device_id),
                 None => Some(0),
             };
+            osd = ab.osd_items(index);
             if let Some(index) = index {
                 let value = |id| ab.gpu_value(id, index);
                 gpu.load = value(source::GPU_USAGE).or(gpu.load);
@@ -263,6 +286,11 @@ impl HardwareMonitor {
             net_down_kbs,
             storage,
             fps,
+            frametime: frame_stats[0],
+            fps_avg: frame_stats[1],
+            fps_1low: frame_stats[2],
+            fps_01low: frame_stats[3],
+            osd,
         }
     }
 

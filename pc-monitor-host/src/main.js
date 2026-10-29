@@ -28,6 +28,8 @@ const FONT_STACKS = {
   exo2: `"Exo 2", ${SYSTEM_FONT}`,
   chakra: `"Chakra Petch", ${SYSTEM_FONT}`,
   oxanium: `"Oxanium", ${SYSTEM_FONT}`,
+  // Whatever monospace font the device has (Consolas on Windows, Droid Sans Mono on Android).
+  mono: '"Cascadia Mono", Consolas, "Roboto Mono", "Droid Sans Mono", monospace',
 };
 
 // Formatting preferences, refreshed from /config.json on each poll.
@@ -250,83 +252,8 @@ function updateMiniRings(data) {
 }
 
 window.addEventListener("resize", layoutMiniGrid);
+window.addEventListener("resize", () => updateCardZoom());
 
-/* ---------- AIDA64-style model: arc gauges + sparklines ---------- */
-
-const HISTORY_MAX = 60;
-const history = {};
-
-/** Arc paths need their length measured once so the dash offset animates
- *  correctly, same trick used for the minimal rings. */
-function initArcLengths() {
-  const aida = document.getElementById("dashboard-aida");
-  const wasHidden = aida && aida.hidden;
-  if (aida) aida.hidden = false;
-
-  document.querySelectorAll(".aida-gauge-fill, .aida-big-fill").forEach((el) => {
-    const length = el.getTotalLength();
-    el.style.strokeDasharray = String(length);
-    el.style.strokeDashoffset = String(length);
-    el.dataset.length = String(length);
-  });
-
-  if (aida && wasHidden) aida.hidden = true;
-}
-
-function setArc(id, value, max) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  const length = Number(el.dataset.length) || 0;
-  const ratio = Math.max(0, Math.min(1, value / max));
-  el.style.strokeDashoffset = length * (1 - ratio);
-}
-
-function pushHistory(key, value) {
-  if (!history[key]) history[key] = [];
-  const series = history[key];
-  series.push(value);
-  if (series.length > HISTORY_MAX) series.shift();
-}
-
-function renderSparkline(id, key, max) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  const series = history[key];
-  if (!series || series.length < 2) return;
-
-  const width = 100;
-  const height = 40;
-  const step = width / (HISTORY_MAX - 1);
-  // Right-aligned so the newest sample is always at the right edge.
-  const offset = width - (series.length - 1) * step;
-
-  const points = series
-    .map((value, i) => {
-      const x = offset + i * step;
-      const y = height - Math.max(0, Math.min(1, value / max)) * height;
-      return `${x.toFixed(1)},${y.toFixed(1)}`;
-    })
-    .join(" ");
-
-  el.setAttribute("points", points);
-}
-
-function renderAidaStorage(drives) {
-  const container = document.getElementById("aida-storage-list");
-  if (!container || !Array.isArray(drives)) return;
-
-  container.innerHTML = "";
-  for (const drive of drives) {
-    const row = document.createElement("div");
-    row.className = "aida-storage-row";
-    row.innerHTML = `
-      <span class="storage-name">${drive.name}</span>
-      <div class="bar"><div class="bar-fill" style="width:${drive.percent}%"></div></div>
-      <span class="storage-pct">${drive.percent}%</span>
-    `;
-    container.appendChild(row);
-  }
-}
 
 function cpuName(data) {
   return deviceLabels.cpu.trim() || data.cpu_name;
@@ -334,77 +261,6 @@ function cpuName(data) {
 
 function gpuName(data) {
   return deviceLabels.gpu.trim() || data.gpu_name;
-}
-
-function applyAidaSample(data) {
-  if (data.cpu_name) setText("aida-cpu-name", cpuName(data));
-  if (data.gpu_name) setText("aida-gpu-name", gpuName(data));
-
-  if (typeof data.cpu_load === "number") {
-    setText("aida-cpu-load", Math.round(data.cpu_load));
-    setArc("aida-cpu-load-gauge", data.cpu_load, 100);
-  }
-  if (typeof data.cpu_temp === "number") {
-    setText("aida-cpu-temp", Math.round(data.cpu_temp));
-    setArc("aida-cpu-temp-gauge", data.cpu_temp, SCALE_MAX.temp);
-    pushHistory("cpu_temp", data.cpu_temp);
-    renderSparkline("aida-cpu-temp-line", "cpu_temp", SCALE_MAX.temp);
-  }
-  if (typeof data.cpu_clock === "number") {
-    setText("aida-cpu-clock", formatFreqValue(data.cpu_clock));
-    setArc("aida-cpu-clock-gauge", data.cpu_clock, SCALE_MAX.cpuClock);
-    pushHistory("cpu_clock", data.cpu_clock);
-    renderSparkline("aida-cpu-clock-line", "cpu_clock", SCALE_MAX.cpuClock);
-  }
-
-  if (typeof data.gpu_load === "number") {
-    setText("aida-gpu-load", Math.round(data.gpu_load));
-    setArc("aida-gpu-load-gauge", data.gpu_load, 100);
-  }
-  if (typeof data.gpu_temp === "number") {
-    setText("aida-gpu-temp", Math.round(data.gpu_temp));
-    setArc("aida-gpu-temp-gauge", data.gpu_temp, SCALE_MAX.temp);
-    pushHistory("gpu_temp", data.gpu_temp);
-    renderSparkline("aida-gpu-temp-line", "gpu_temp", SCALE_MAX.temp);
-  }
-  if (typeof data.gpu_clock === "number") {
-    setText("aida-gpu-clock", formatFreqValue(data.gpu_clock));
-    setArc("aida-gpu-clock-gauge", data.gpu_clock, SCALE_MAX.gpuClock);
-    pushHistory("gpu_clock", data.gpu_clock);
-    renderSparkline("aida-gpu-clock-line", "gpu_clock", SCALE_MAX.gpuClock);
-  }
-  if (typeof data.gpu_fan === "number") {
-    setText("aida-gpu-fan", Math.round(data.gpu_fan));
-    setArc("aida-gpu-fan-gauge", data.gpu_fan, 100);
-    pushHistory("gpu_fan", data.gpu_fan);
-    renderSparkline("aida-gpu-fan-line", "gpu_fan", 100);
-  }
-
-  if (typeof data.ram_load === "number") {
-    setText("aida-ram-pct", `${Math.round(data.ram_load)}%`);
-    setArc("aida-ram-gauge", data.ram_load, 100);
-    pushHistory("ram_load", data.ram_load);
-    renderSparkline("aida-ram-line", "ram_load", 100);
-  }
-
-  if (typeof data.net_down_kbs === "number") {
-    setText("aida-net-down", decimal(data.net_down_kbs, 1));
-    pushHistory("net_down", data.net_down_kbs);
-    const max = Math.max(100, ...history.net_down);
-    setText("aida-net-down-max", Math.round(max));
-    setArc("aida-net-down-gauge", data.net_down_kbs, max);
-    renderSparkline("aida-net-down-line", "net_down", max);
-  }
-  if (typeof data.net_up_kbs === "number") {
-    setText("aida-net-up", decimal(data.net_up_kbs, 1));
-    pushHistory("net_up", data.net_up_kbs);
-    const max = Math.max(100, ...history.net_up);
-    setText("aida-net-up-max", Math.round(max));
-    setArc("aida-net-up-gauge", data.net_up_kbs, max);
-    renderSparkline("aida-net-up-line", "net_up", max);
-  }
-
-  if (data.storage) renderAidaStorage(data.storage);
 }
 
 function updateClock() {
@@ -570,10 +426,33 @@ function updateFrostClip() {
 
 /** The part of the video that's on screen (object-fit: cover), shrunk into
  *  a canvas a few dozen pixels wide and darkened like the video itself. */
+/** The fit actually used: "auto" crops videos to fill the screen but shows a
+ *  picture whole, so a wallpaper isn't zoomed in on. */
+function backgroundFit(isImage) {
+  const fit = document.documentElement.dataset.fit || "auto";
+  return fit === "auto" ? (isImage ? "contain" : "cover") : fit;
+}
+
+/** A picture shown whole leaves bars; a blurred, darkened copy of it fills
+ *  them instead of plain black (static, so it costs nothing). */
+function updateBackdrop(file) {
+  const backdrop = document.getElementById("screensaver-backdrop");
+  if (!backdrop) return;
+  const show = isImageFile(file) && backgroundFit(true) === "contain";
+  backdrop.hidden = !show;
+  const src = show ? `/assets/videos/${encodeURIComponent(file)}` : "";
+  if (show && backdrop.getAttribute("src") !== src) backdrop.src = src;
+  if (!show) backdrop.removeAttribute("src");
+}
+
 function drawFrost() {
-  const video = document.getElementById("screensaver");
+  const image = document.getElementById("screensaver-img");
+  const useImage = image && !image.hidden;
+  const video = useImage ? image : document.getElementById("screensaver");
   const canvas = document.getElementById("glass-frost");
-  if (!video || !canvas || video.readyState < 2 || !video.videoWidth) return;
+  const sourceWidth = useImage ? image.naturalWidth : video?.videoWidth;
+  const sourceHeight = useImage ? image.naturalHeight : video?.videoHeight;
+  if (!video || !canvas || !sourceWidth || (!useImage && video.readyState < 2)) return;
   const blur = Math.max(0.1, Number(displayConfig.glass_blur) || 1);
   const w = Math.max(8, Math.round(innerWidth / (4 + 10 * blur)));
   const h = Math.max(4, Math.round((w * innerHeight) / innerWidth));
@@ -581,13 +460,23 @@ function drawFrost() {
     canvas.width = w;
     canvas.height = h;
   }
-  const scale = Math.max(innerWidth / video.videoWidth, innerHeight / video.videoHeight);
-  const sw = innerWidth / scale;
-  const sh = innerHeight / scale;
   const ctx = canvas.getContext("2d");
-  ctx.filter = "blur(1px)";
-  ctx.drawImage(video, (video.videoWidth - sw) / 2, (video.videoHeight - sh) / 2, sw, sh, 0, 0, w, h);
-  ctx.filter = "none";
+  const fit = backgroundFit(useImage);
+  if (fit === "fill") {
+    ctx.drawImage(video, 0, 0, sourceWidth, sourceHeight, 0, 0, w, h);
+  } else if (fit === "contain") {
+    const scale = Math.min(w / sourceWidth, h / sourceHeight);
+    const dw = sourceWidth * scale;
+    const dh = sourceHeight * scale;
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0, 0, w, h);
+    ctx.drawImage(video, 0, 0, sourceWidth, sourceHeight, (w - dw) / 2, (h - dh) / 2, dw, dh);
+  } else {
+    const scale = Math.max(innerWidth / sourceWidth, innerHeight / sourceHeight);
+    const sw = innerWidth / scale;
+    const sh = innerHeight / scale;
+    ctx.drawImage(video, (sourceWidth - sw) / 2, (sourceHeight - sh) / 2, sw, sh, 0, 0, w, h);
+  }
   const overlay = parseFloat(cssVar("--video-overlay"));
   ctx.fillStyle = `rgba(0,0,0,${Number.isFinite(overlay) ? overlay : 0.35})`;
   ctx.fillRect(0, 0, w, h);
@@ -607,7 +496,10 @@ function updateGlassEffects() {
   const aurora = document.getElementById("glass-aurora");
   if (aurora) aurora.hidden = !active || videoBehind;
 
-  glassFrosted = active && videoBehind && (Number(displayConfig.glass_blur) || 0) > 0;
+  // Blurring a playing video is heavy, so it's opt-in; a still picture is
+  // blurred once, for free.
+  const stillBehind = document.body.classList.contains("bg-image");
+  glassFrosted = active && videoBehind && (Number(displayConfig.glass_blur) || 0) > 0 && (stillBehind || displayConfig.glass_frost === true);
   document.body.classList.toggle("glass-frosted", glassFrosted);
 
   clearInterval(glassTimer);
@@ -619,7 +511,8 @@ function updateGlassEffects() {
   } else if (!videoBehind) {
     drawAurora(performance.now());
   }
-  const moving = glassFrosted || (!videoBehind && displayConfig.glass_animated_bg !== false);
+  const stillImage = document.body.classList.contains("bg-image");
+  const moving = (glassFrosted && !stillImage) || (!videoBehind && displayConfig.glass_animated_bg !== false);
   if (moving) glassTimer = setInterval(glassTick, 1000 / (glassFrosted ? FROST_FPS : GLASS_FPS));
 }
 
@@ -627,53 +520,241 @@ window.addEventListener("resize", () => {
   if (dashboardMode === "glass") updateGlassEffects();
 });
 
-function applyGlassSample(data) {
-  if (dashboardMode !== "glass") return;
-  if (data.cpu_name) setText("glass-cpu-name", cpuName(data));
-  if (data.gpu_name) setText("glass-gpu-name", gpuName(data));
+/** The Glass and AMOLED models have the same cards; only the id prefix
+ *  ("glass" / "am") and the look in CSS differ. */
+function applyCardsSample(data) {
+  const prefix = dashboardMode === "glass" ? "glass" : dashboardMode === "amoled" ? "am" : null;
+  if (!prefix) return;
+  if (data.cpu_name) setText(`${prefix}-cpu-name`, cpuName(data));
+  if (data.gpu_name) setText(`${prefix}-gpu-name`, gpuName(data));
 
   for (const kind of ["cpu", "gpu"]) {
     const load = data[`${kind}_load`];
     if (typeof load === "number") {
-      setText(`glass-${kind}-load`, Math.round(load));
-      setGlassRing(`glass-${kind}-ring`, load);
+      setText(`${prefix}-${kind}-load`, Math.round(load));
+      setGlassRing(`${prefix}-${kind}-ring`, load);
     }
     const temp = data[`${kind}_temp`];
-    setText(`glass-${kind}-temp`, typeof temp === "number" ? Math.round(temp) : "--");
+    setText(`${prefix}-${kind}-temp`, typeof temp === "number" ? Math.round(temp) : "--");
     const clock = data[`${kind}_clock`];
-    setText(`glass-${kind}-clock`, typeof clock === "number" ? formatFreq(clock) : "--");
+    setText(`${prefix}-${kind}-clock`, typeof clock === "number" ? formatFreq(clock) : "--");
     const power = data[`${kind}_power`];
-    setText(`glass-${kind}-power`, typeof power === "number" ? `${Math.round(power)} W` : "--");
+    setText(`${prefix}-${kind}-power`, typeof power === "number" ? `${Math.round(power)} W` : "--");
   }
 
   if (typeof data.ram_load === "number") {
-    setText("glass-ram-load", Math.round(data.ram_load));
-    setWidth("glass-ram-bar", data.ram_load);
+    setText(`${prefix}-ram-load`, Math.round(data.ram_load));
+    setWidth(`${prefix}-ram-bar`, data.ram_load);
   }
   if (typeof data.ram_used_mb === "number" && typeof data.ram_free_mb === "number") {
-    setText("glass-ram-detail", `${formatMem(data.ram_used_mb)} / ${formatMem(data.ram_used_mb + data.ram_free_mb)}`);
+    setText(`${prefix}-ram-detail`, `${formatMem(data.ram_used_mb)} / ${formatMem(data.ram_used_mb + data.ram_free_mb)}`);
   }
   if (typeof data.gpu_mem_used_mb === "number" && data.gpu_mem_total_mb) {
     const percent = (data.gpu_mem_used_mb / data.gpu_mem_total_mb) * 100;
-    setText("glass-vram-load", Math.round(percent));
-    setText("glass-vram-detail", `${formatMem(data.gpu_mem_used_mb)} / ${formatMem(data.gpu_mem_total_mb)}`);
-    setWidth("glass-vram-bar", percent);
+    setText(`${prefix}-vram-load`, Math.round(percent));
+    setText(`${prefix}-vram-detail`, `${formatMem(data.gpu_mem_used_mb)} / ${formatMem(data.gpu_mem_total_mb)}`);
+    setWidth(`${prefix}-vram-bar`, percent);
   }
-  if (typeof data.net_down_kbs === "number") setText("glass-net-down", formatNet(data.net_down_kbs));
-  if (typeof data.net_up_kbs === "number") setText("glass-net-up", formatNet(data.net_up_kbs));
+  if (typeof data.net_down_kbs === "number") setText(`${prefix}-net-down`, formatNet(data.net_down_kbs));
+  if (typeof data.net_up_kbs === "number") setText(`${prefix}-net-up`, formatNet(data.net_up_kbs));
 
-  const drives = document.getElementById("glass-drives");
+  const drives = document.getElementById(`${prefix}-drives`);
   if (drives && Array.isArray(data.storage)) {
     drives.innerHTML = data.storage
       .slice(0, 3)
       .map(
-        (d) => `<div class="glass-drive"><span>${d.name.replace(/\\$/, "")}</span>` +
-          `<div class="glass-bar"><i style="width:${Math.max(0, Math.min(100, d.percent))}%"></i></div>` +
+        (d) => `<div class="${prefix}-drive"><span>${d.name.replace(/\\$/, "")}</span>` +
+          `<div class="${prefix}-bar"><i style="width:${Math.max(0, Math.min(100, d.percent))}%"></i></div>` +
           `<b>${d.percent}%</b></div>`
       )
       .join("");
   }
 }
+
+/* ---------- Afterburner model: lines of text, like MSI's on-screen display ---------- */
+
+const OSD_GROUP_ORDER = ["CPU", "GPU", "RAM", "FPS"];
+// Afterburner sensors that need no caption inside their group: the line's
+// label ("GPU") and the unit already say what they are.
+const OSD_PLAIN_SOURCES = new Set([0x00, 0x20, 0x30, 0x50, 0x61, 0x80, 0x90, 0x91, 0xa0, 0x100]);
+
+function osdLabel(key, fallback) {
+  const custom = (displayConfig.osd_labels || {})[key];
+  return custom && custom.trim() ? custom.trim() : fallback;
+}
+
+function escapeHtml(text) {
+  return String(text).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+}
+
+/** Value and unit as text, honoring the MHz/GHz and MB/GB choices. */
+function osdFormat(value, units) {
+  if (!isNum(value)) return { text: "--", unit: "" };
+  const unit = (units || "").trim();
+  if (unit === "MB") {
+    return displayConfig.mem_unit === "gb"
+      ? { text: decimal(value / 1024, 1), unit: "GB" }
+      : { text: String(Math.round(value)), unit: "MB" };
+  }
+  if (unit === "MHz") {
+    return displayConfig.freq_unit === "ghz"
+      ? { text: decimal(value / 1000, 2), unit: "GHz" }
+      : { text: String(Math.round(value)), unit: "MHz" };
+  }
+  if (unit === "ms") return { text: decimal(value, 1), unit };
+  if (unit === "V") return { text: decimal(value, 3), unit };
+  return { text: String(Math.round(value)), unit };
+}
+
+function osdGroupOf(item) {
+  const source = item.source;
+  if (source >= 0x50 && source < 0x60) return "FPS";
+  if (source === 0x91 || source === 0x92) return "RAM";
+  if (source >= 0x80 || /^cpu/i.test(item.name)) return "CPU";
+  return "GPU";
+}
+
+function osdCaption(item, group) {
+  if (group === "FPS") return item.source === 0x50 ? "" : item.name.replace(/^framerate\s*/i, "") || item.name;
+  if (OSD_PLAIN_SOURCES.has(item.source)) return "";
+  return item.source === 0x31 ? "VRAM" : item.name;
+}
+
+/** Same sensors Afterburner shows in its own OSD, grouped into one line per
+ *  device (CPU, GPU, RAM, frame stats). */
+function osdFromAfterburner(items) {
+  const groups = new Map();
+  for (const item of items) {
+    const group = osdGroupOf(item);
+    if (!groups.has(group)) groups.set(group, []);
+    const units = item.units || (item.source === 0x00 || item.source === 0x80 ? "°C" : "");
+    groups.get(group).push({ ...osdFormat(item.value, units), caption: osdCaption(item, group) });
+  }
+  return [...groups.keys()]
+    .sort((a, b) => OSD_GROUP_ORDER.indexOf(a) - OSD_GROUP_ORDER.indexOf(b))
+    .map((label) => ({ label: osdLabel(label.toLowerCase(), label), items: groups.get(label) }));
+}
+
+function osdItem(value, units, caption = "") {
+  return isNum(value) ? { ...osdFormat(value, units), caption } : null;
+}
+
+/** Lines the user can pick without Afterburner (see `osd_lines`). */
+const OSD_LINES = {
+  cpu: {
+    label: "CPU",
+    items: (d) => [osdItem(d.cpu_temp, "°C"), osdItem(d.cpu_load, "%"), osdItem(d.cpu_clock, "MHz"), osdItem(d.cpu_power, "W")],
+  },
+  gpu: {
+    label: "GPU",
+    items: (d) => [
+      osdItem(d.gpu_temp, "°C"),
+      osdItem(d.gpu_load, "%"),
+      osdItem(d.gpu_clock, "MHz"),
+      osdItem(d.gpu_power, "W"),
+      osdItem(d.gpu_fan, "%", "FAN"),
+    ],
+  },
+  vram: {
+    label: "VRAM",
+    items: (d) => [
+      osdItem(d.gpu_mem_used_mb, "MB"),
+      isNum(d.gpu_mem_used_mb) && d.gpu_mem_total_mb ? osdItem((d.gpu_mem_used_mb / d.gpu_mem_total_mb) * 100, "%") : null,
+    ],
+  },
+  ram: { label: "RAM", items: (d) => [osdItem(d.ram_used_mb, "MB"), osdItem(d.ram_load, "%")] },
+  fps: {
+    label: "FPS",
+    always: true,
+    items: (d) => [
+      osdItem(d.fps, "FPS") || { text: "--", unit: "FPS", caption: "" },
+      osdItem(d.frametime, "ms", "Frametime"),
+      osdItem(d.fps_1low, "FPS", "1% Low"),
+      osdItem(d.fps_01low, "FPS", "0.1% Low"),
+      osdItem(d.fps_avg, "FPS", "Avg"),
+    ],
+  },
+  net: {
+    label: "NET",
+    items: (d) => {
+      const speed = (kbs, caption) => {
+        if (!isNum(kbs)) return null;
+        return kbs >= 1024 ? { text: decimal(kbs / 1024, 1), unit: "MB/s", caption } : { text: String(Math.round(kbs)), unit: "KB/s", caption };
+      };
+      return [speed(d.net_down_kbs, "↓"), speed(d.net_up_kbs, "↑")];
+    },
+  },
+  disk: {
+    label: "DISK",
+    items: (d) => (Array.isArray(d.storage) ? d.storage.map((drive) => ({ text: String(drive.percent), unit: "%", caption: drive.name.replace(/\$/, "") })) : []),
+  },
+};
+
+function osdCustom(data) {
+  const keys = Array.isArray(displayConfig.osd_lines) ? displayConfig.osd_lines : ["cpu", "gpu", "ram", "fps"];
+  return keys
+    .filter((key) => OSD_LINES[key])
+    .map((key) => ({ key, def: OSD_LINES[key], items: OSD_LINES[key].items(data).filter(Boolean) }))
+    .filter(({ def, items }) => items.length > 0 || def.always)
+    .map(({ key, def, items }) => ({ label: osdLabel(key, def.label), items }));
+}
+
+let osdFit = 0;
+
+/** Grows the text until the lines fill the screen. It only changes size when
+ *  the fit moves clearly, so a number gaining a digit doesn't make the whole
+ *  overlay jump every second. */
+function fitOsd() {
+  const panel = document.getElementById("dashboard-osd");
+  const box = document.getElementById("osd-lines");
+  if (!panel || !box || panel.hidden) return;
+  const probe = 20;
+  box.style.fontSize = `${probe}px`;
+  const width = box.scrollWidth;
+  const height = box.scrollHeight;
+  if (!width || !height) return;
+  const fit = Math.min((panel.clientWidth * 0.94) / width, (panel.clientHeight * 0.94) / height);
+  if (!osdFit || fit < osdFit * 0.99 || fit > osdFit * 1.12) osdFit = fit;
+  const size = Math.min(probe * osdFit, innerHeight * 0.14);
+  box.style.fontSize = `${size * Math.min(1, Math.max(0.3, Number(displayConfig.osd_scale) || 1))}px`;
+}
+
+const osdSlotWidth = new Map();
+
+function applyOsdSample(data) {
+  if (dashboardMode !== "osd") return;
+  const mirror = displayConfig.osd_source !== "custom" && Array.isArray(data.osd) && data.osd.length > 0;
+  const lines = mirror ? osdFromAfterburner(data.osd) : osdCustom(data);
+  document.getElementById("osd-lines").innerHTML = lines
+    .map(
+      (line) =>
+        `<div class="osd-line"><span class="osd-label">${escapeHtml(line.label)}</span>` +
+        line.items
+          .map((it, col) => {
+            // Each value slot keeps the widest text it has shown (right
+            // aligned), so 9 -> 10 doesn't shift the line or rescale the block.
+            const slot = `${line.label}#${col}`;
+            const width = Math.max(osdSlotWidth.get(slot) || 3, String(it.text).length);
+            osdSlotWidth.set(slot, width);
+            return (
+              `<span class="osd-item${it.text === "--" ? " osd-na" : ""}">` +
+              (it.caption ? `<small>${escapeHtml(it.caption)}</small>` : "") +
+              `<b style="min-width:${width}ch">${escapeHtml(it.text)}</b>` +
+              (it.unit ? `<i>${escapeHtml(it.unit)}</i>` : "") +
+              `</span>`
+            );
+          })
+          .join("") +
+        `</div>`
+    )
+    .join("");
+  fitOsd();
+}
+
+window.addEventListener("resize", () => {
+  osdFit = 0;
+  fitOsd();
+});
 
 function applySample(data) {
   if (data.cpu_name) setText("cpu-name", cpuName(data));
@@ -742,9 +823,9 @@ function applySample(data) {
   if (data.storage) renderStorage(data.storage);
   updateMiniRings(data);
 
-  applyAidaSample(data);
   applyTempsSample(data);
-  applyGlassSample(data);
+  applyCardsSample(data);
+  applyOsdSample(data);
   applyFps(data.fps);
 }
 
@@ -876,11 +957,6 @@ function applyDisplay(display) {
     document.body.classList.toggle("square-style", display.corner_radius === 0);
   }
 
-  // Keep the graph model's clock axis in step with both the real scale and
-  // the chosen unit.
-  setText("aida-cpu-clock-max", formatFreq(SCALE_MAX.cpuClock));
-  setText("aida-gpu-clock-max", formatFreq(SCALE_MAX.gpuClock));
-
   const topbar = document.getElementById("topbar");
   if (topbar) topbar.dataset.clock = display.clock_position || "center";
 
@@ -906,6 +982,12 @@ function applyDisplay(display) {
   root.setProperty("--glass-opacity", display.glass_opacity ?? 0.35);
 
   applyTempsLayout(display);
+  const osdPanel = document.getElementById("dashboard-osd");
+  if (osdPanel) {
+    osdPanel.dataset.align = display.osd_align || "left";
+    osdPanel.dataset.valign = display.osd_valign || "top";
+    osdFit = 0;
+  }
   applyStatRows("card-cpu", display.cpu_stats);
   applyStatRows("card-gpu", display.gpu_stats);
   buildMiniRings(display.mini_sensors || DEFAULT_MINI_SENSORS);
@@ -993,38 +1075,103 @@ function applyDashboardMode(mode) {
   const panels = {
     full: document.getElementById("dashboard-full"),
     minimal: document.getElementById("dashboard-minimal"),
-    aida: document.getElementById("dashboard-aida"),
     temps: document.getElementById("dashboard-temps"),
     glass: document.getElementById("dashboard-glass"),
+    amoled: document.getElementById("dashboard-amoled"),
+    osd: document.getElementById("dashboard-osd"),
   };
 
   for (const [name, panel] of Object.entries(panels)) {
     if (panel) panel.hidden = name !== dashboardMode;
   }
   document.body.classList.toggle("model-glass", dashboardMode === "glass");
+  document.body.classList.toggle("model-amoled", dashboardMode === "amoled");
+  document.body.classList.toggle("model-osd", dashboardMode === "osd");
   layoutMiniGrid();
 }
 
 
-function applyCardVisibility(cards) {
-  const cardSelectors = {
-    cpu: ".card-cpu",
-    gpu: ".card-gpu",
-    ram: ".card-ram",
-    network: ".card-net",
-    storage: ".card-storage",
-  };
+const CARD_SELECTORS = {
+  cpu: ".card-cpu",
+  gpu: ".card-gpu",
+  ram: ".card-ram",
+  network: ".card-net",
+  storage: ".card-storage",
+};
 
-  for (const [key, selector] of Object.entries(cardSelectors)) {
+/** Scales each card's content by how much bigger the card is than it would
+ *  be in the default layout (a card alone on its row can be twice as big). */
+function updateCardZoom() {
+  const grid = document.getElementById("dashboard-full");
+  if (!grid || grid.hidden) return;
+  const area = grid.getBoundingClientRect();
+  const style = getComputedStyle(grid);
+  const gapX = parseFloat(style.columnGap) || 0;
+  const gapY = parseFloat(style.rowGap) || 0;
+  const width = area.width - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+  const height = area.height - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom);
+  const portrait = innerWidth < innerHeight;
+  // Default layout: two big cards over three small ones, 1.4 : 1 in height.
+  const reference = portrait
+    ? { big: [width, (height - 4 * gapY) / 5], small: [width, (height - 4 * gapY) / 5] }
+    : {
+        big: [(width - gapX) / 2, ((height - gapY) * 1.4) / 2.4],
+        small: [(width - 2 * gapX) / 3, (height - gapY) / 2.4],
+      };
+  for (const [key, selector] of Object.entries(CARD_SELECTORS)) {
     const el = document.querySelector(selector);
-    if (!el) continue;
-    el.style.display = cards[key] === false ? "none" : "";
+    if (!el || el.style.display === "none") continue;
+    const [refW, refH] = reference[key === "cpu" || key === "gpu" ? "big" : "small"];
+    const box = el.getBoundingClientRect();
+    // Geometric mean: growing in only one direction (taller, same width)
+    // scales the content less than growing in both.
+    const zoom = Math.sqrt((box.width / refW) * (box.height / refH));
+    el.style.setProperty("--zoom", String(Math.max(1, Math.min(2.4, Math.round(zoom * 20) / 20))));
   }
+}
+
+/** Hides the cards that are switched off and re-flows the rest so they still
+ *  fill the screen: the big CPU/GPU cards share the top row, the small ones
+ *  the bottom row, and a row with nothing in it gives its height to the other.
+ *  The grid has 12 columns, so 1, 2 and 3 cards per row all divide evenly. */
+function applyCardVisibility(cards) {
+  const on = (key) => cards[key] !== false;
+  for (const [key, selector] of Object.entries(CARD_SELECTORS)) {
+    const el = document.querySelector(selector);
+    if (el) el.style.display = on(key) ? "" : "none";
+  }
+
+  const rows = [["cpu", "gpu"].filter(on), ["ram", "network", "storage"].filter(on)].filter((row) => row.length > 0);
+  rows.forEach((row, index) => {
+    const span = 12 / row.length;
+    row.forEach((key, i) => {
+      const el = document.querySelector(CARD_SELECTORS[key]);
+      el.style.setProperty("--col", `${1 + i * span} / ${1 + (i + 1) * span}`);
+      el.style.setProperty("--row", String(index + 1));
+    });
+  });
+
+  const grid = document.getElementById("dashboard-full");
+  const count = rows.reduce((sum, row) => sum + row.length, 0);
+  // Portrait stacks every card in one column.
+  grid.style.setProperty("--full-count", String(Math.max(1, count)));
+  grid.style.setProperty(
+    "--full-rows",
+    rows.length === 2 ? "minmax(0, 1.4fr) minmax(0, 1fr)" : "minmax(0, 1fr)"
+  );
 }
 
 let screensaverIntervalId = null;
 let screensaverTimeoutId = null;
 let lastScreensaverConfigJson = null;
+
+const IMAGE_FILE = /\.(jpe?g|png|webp|gif)$/i;
+
+/** The gallery holds videos and still images; the file extension tells them
+ *  apart. */
+function isImageFile(name) {
+  return IMAGE_FILE.test(name || "");
+}
 
 function resetScreensaverState() {
   document.body.classList.remove("bg-always");
@@ -1041,6 +1188,24 @@ function resetScreensaverState() {
   if (video) video.pause();
 }
 
+/** Shows the video or the image element, whichever the chosen file is for,
+ *  and returns it. */
+function pickBackgroundElement(file) {
+  const video = document.getElementById("screensaver");
+  const image = document.getElementById("screensaver-img");
+  const useImage = isImageFile(file);
+  video.hidden = useImage;
+  image.hidden = !useImage;
+  document.body.classList.toggle("bg-image", useImage);
+  if (useImage) {
+    video.removeAttribute("src");
+    video.load();
+  } else {
+    image.removeAttribute("src");
+  }
+  return useImage ? image : video;
+}
+
 /** The temperature overlay is independent from the video timing, so toggling
  *  it doesn't restart the screensaver cycle. */
 function applyScreensaverTemps(config) {
@@ -1054,30 +1219,34 @@ function applyScreensaver(config) {
   applyScreensaverTemps(config);
   document.documentElement.style.setProperty("--video-overlay", config.overlay_opacity ?? 0.35);
 
-  const { show_temps, temps_corner, overlay_opacity, ...videoConfig } = config;
+  document.documentElement.dataset.fit = config.fit || "auto";
+  updateBackdrop(config.video || "aurora.webm");
+  document.documentElement.style.setProperty("--bg-fit", backgroundFit(isImageFile(config.video || "aurora.webm")));
+  const { show_temps, temps_corner, overlay_opacity, fit, ...videoConfig } = config;
   const json = JSON.stringify(videoConfig);
   if (json === lastScreensaverConfigJson) return;
   lastScreensaverConfigJson = json;
 
   resetScreensaverState();
 
-  const video = document.getElementById("screensaver");
-  if (!video) return;
-
   const mode = config.mode || "cycle";
   const videoFile = config.video || "aurora.webm";
-  video.src = `/assets/videos/${videoFile}`;
+  const media = pickBackgroundElement(videoFile);
+  const isImage = media.tagName === "IMG";
+  media.src = `/assets/videos/${encodeURIComponent(videoFile)}`;
+  // The frosted-glass copy has to be redrawn once the picture has loaded.
+  media.onload = media.onloadeddata = () => updateGlassEffects();
 
   if (mode === "off") return;
 
   let videoAvailable = true;
-  video.onerror = () => {
+  media.onerror = () => {
     videoAvailable = false;
   };
 
   if (mode === "always") {
     document.body.classList.add("bg-always");
-    video.play().catch(() => {});
+    if (!isImage) media.play().catch(() => {});
     return;
   }
 
@@ -1088,12 +1257,14 @@ function applyScreensaver(config) {
     if (!videoAvailable) return;
 
     document.body.classList.add("screensaver-active");
-    video.currentTime = 0;
-    video.play().catch(() => {});
+    if (!isImage) {
+      media.currentTime = 0;
+      media.play().catch(() => {});
+    }
 
     screensaverTimeoutId = setTimeout(() => {
       document.body.classList.remove("screensaver-active");
-      video.pause();
+      if (!isImage) media.pause();
     }, durationMs);
   }, intervalMs);
 }
@@ -1126,7 +1297,7 @@ async function loadConfig() {
 
 const CONFIG_POLL_INTERVAL_MS = 4000;
 
-// The settings window opens `/?model=aida` to preview a model in a browser.
+// The settings window opens `/?model=amoled` to preview a model in a browser.
 const PREVIEW_MODEL = new URLSearchParams(location.search).get("model");
 
 function configUrl() {
@@ -1166,13 +1337,13 @@ async function pollConfig() {
   applyCardVisibility(config.cards || {});
   applyScreensaver(config.screensaver || {});
   updateGlassEffects();
+  updateCardZoom();
 }
 
 window.addEventListener("DOMContentLoaded", async () => {
   updateClock();
   setInterval(updateClock, 1000);
   initMiniRingLengths();
-  initArcLengths();
   startDataFeed();
 
   await pollConfig();

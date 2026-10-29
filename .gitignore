@@ -16,10 +16,5 @@ android-kiosk/local.properties
 .DS_Store
 Thumbs.db
 
-# Personal reference screenshots and notes (not part of the project)
-/aida*.png
-/full*.png
-/min*.png
-/modelo*.png
+# Personal notes (not part of the project)
 /projeto.md
-android-kiosk/kiosk_test2.png

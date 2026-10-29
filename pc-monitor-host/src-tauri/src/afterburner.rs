@@ -18,6 +18,7 @@
 //! GPU sensors are looked up by source id + GPU index, not by name: with two
 //! GPUs Afterburner renames them "GPU1 temperature", "GPU2 temperature"...
 
+use serde::Serialize;
 use std::ffi::CStr;
 use windows::core::PCWSTR;
 use windows::Win32::Foundation::CloseHandle;
@@ -61,6 +62,10 @@ pub struct AfterburnerEntry {
     /// totals like "CPU temperature").
     pub gpu: i32,
     pub source: u32,
+    /// Unit label ("°C", "MHz", "FPS"...).
+    pub units: String,
+    /// MAHM_SHARED_MEMORY_ENTRY_FLAG_*: bit 0 = shown in the on-screen display.
+    pub flags: u32,
 }
 
 pub struct AfterburnerData {
@@ -81,6 +86,22 @@ impl AfterburnerData {
             .iter()
             .position(|id| id.to_ascii_uppercase().contains(&wanted))
             .map(|index| index as i32)
+    }
+
+    /// The sensors ticked for Afterburner's on-screen display, in its order.
+    /// GPU sensors are limited to `gpu` so a second card doesn't double the lines.
+    pub fn osd_items(&self, gpu: Option<i32>) -> Vec<OsdItem> {
+        self.entries
+            .iter()
+            .filter(|entry| entry.flags & 1 != 0)
+            .filter(|entry| !(entry.gpu >= 0 && entry.source < 0x80 && gpu.is_some_and(|g| g != entry.gpu)))
+            .map(|entry| OsdItem {
+                name: entry.name.clone(),
+                value: Some(entry.value).filter(|v| is_valid(*v)),
+                units: entry.units.clone(),
+                source: entry.source,
+            })
+            .collect()
     }
 
     pub fn gpu_value(&self, source: u32, gpu: i32) -> Option<f32> {
@@ -121,6 +142,25 @@ unsafe fn read_str(ptr: *const u8, max: usize) -> String {
         .to_string()
 }
 
+/// Like `read_str` for text in the ANSI code page: Afterburner writes the
+/// degree sign as a single 0xB0 byte, which isn't valid UTF-8.
+unsafe fn read_latin1(ptr: *const u8, max: usize) -> String {
+    let bytes = std::slice::from_raw_parts(ptr, max);
+    let end = bytes.iter().position(|&b| b == 0).unwrap_or(max);
+    bytes[..end].iter().map(|&b| b as char).collect()
+}
+
+/// One sensor Afterburner shows in its on-screen display, as the dashboard's
+/// "Afterburner" model draws it. `value` is None while the sensor has no
+/// data (framerate with no game running).
+#[derive(Serialize, Clone)]
+pub struct OsdItem {
+    pub name: String,
+    pub value: Option<f32>,
+    pub units: String,
+    pub source: u32,
+}
+
 pub fn read() -> Option<AfterburnerData> {
     unsafe {
         let name = wide_null(SHARED_MEMORY_NAME);
@@ -155,12 +195,14 @@ pub fn read() -> Option<AfterburnerData> {
                 continue;
             }
 
+            let units = if entry_size >= 2 * STRING_SIZE { read_latin1(entry_ptr.add(STRING_SIZE), STRING_SIZE) } else { String::new() };
             let tail = entry_ptr.add(data_offset);
+            let flags = (tail.add(12) as *const u32).read_unaligned();
             let value = (tail as *const f32).read_unaligned();
             let gpu = (tail.add(16) as *const i32).read_unaligned();
             let source = (tail.add(20) as *const u32).read_unaligned();
 
-            entries.push(AfterburnerEntry { name, value, gpu, source });
+            entries.push(AfterburnerEntry { name, value, gpu, source, units, flags });
         }
 
         let gpus_ptr = entries_ptr.add(header.num_entries as usize * entry_size);
@@ -190,7 +232,7 @@ mod tests {
             Some(data) => {
                 println!("Found {} entries:", data.entries.len());
                 for entry in &data.entries {
-                    println!("  {:?} = {} (gpu {}, source {:#x})", entry.name, entry.value, entry.gpu, entry.source);
+                    println!("  {:?} = {} {:?} (gpu {}, source {:#x}, flags {:#x})", entry.name, entry.value, entry.units, entry.gpu, entry.source, entry.flags);
                 }
                 println!("GPUs: {:?}", data.gpu_ids);
 

@@ -53,12 +53,18 @@ body {
   inset: 0;
   width: 100vw;
   height: 100vh;
-  object-fit: cover;
+  object-fit: var(--bg-fit, cover);
   background: #000;
   opacity: 0;
   pointer-events: none;
   z-index: 999;
   transition: opacity 0.8s ease;
+}
+
+.screensaver.backdrop {
+  object-fit: cover;
+  filter: blur(26px) brightness(0.6);
+  transform: scale(1.15);
 }
 
 body.screensaver-active .screensaver {
@@ -72,8 +78,9 @@ body.bg-always .screensaver {
 body.bg-always .topbar,
 body.bg-always .dashboard,
 body.bg-always .dashboard-minimal,
-body.bg-always .dashboard-aida,
 body.bg-always .dashboard-temps,
+body.bg-always .dashboard-amoled,
+body.bg-always .dashboard-osd,
 body.bg-always .dashboard-glass {
   position: relative;
   z-index: 1;
@@ -257,17 +264,20 @@ body.host-away .host-away-screen { display: flex; }
   flex: 1 1 auto;
   min-height: 0;
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  grid-template-rows: minmax(0, 1.4fr) minmax(0, 1fr);
+  /* 12 columns so 1, 2 or 3 cards in a row all share the width evenly;
+     main.js sets --col/--row on each card and --full-rows from the cards
+     that are switched on, so what's left always fills the screen. */
+  grid-template-columns: repeat(12, 1fr);
+  grid-template-rows: var(--full-rows, minmax(0, 1.4fr) minmax(0, 1fr));
   gap: calc(1.4vh * var(--density)) calc(1.4vw * var(--density));
   padding: calc(1vh * var(--density)) calc(1.6vw * var(--density)) calc(1.6vh * var(--density));
 }
 
-.card-cpu { grid-column: 1 / 4; grid-row: 1; }
-.card-gpu { grid-column: 4 / 7; grid-row: 1; }
-.card-ram { grid-column: 1 / 3; grid-row: 2; }
-.card-net { grid-column: 3 / 5; grid-row: 2; }
-.card-storage { grid-column: 5 / 7; grid-row: 2; }
+.card-cpu { grid-column: var(--col, 1 / 7); grid-row: var(--row, 1); }
+.card-gpu { grid-column: var(--col, 7 / 13); grid-row: var(--row, 1); }
+.card-ram { grid-column: var(--col, 1 / 5); grid-row: var(--row, 2); }
+.card-net { grid-column: var(--col, 5 / 9); grid-row: var(--row, 2); }
+.card-storage { grid-column: var(--col, 9 / 13); grid-row: var(--row, 2); }
 
 .card {
   background: var(--card-bg);
@@ -278,6 +288,12 @@ body.host-away .host-away-screen { display: flex; }
   min-width: 0;
   display: flex;
   flex-direction: column;
+}
+
+/* A card that ends up bigger than in the default layout (because others were
+   switched off) scales its content up to fill it; main.js sets --zoom. */
+.dashboard .card > * {
+  zoom: var(--zoom, 1);
 }
 
 .card-header {
@@ -341,9 +357,7 @@ body.host-away .host-away-screen { display: flex; }
    the colored fill. */
 body.square-style .ring-fill,
 body.square-style .mini-fill,
-body.square-style .mini-track,
-body.square-style .aida-gauge-track,
-body.square-style .aida-big-track {
+body.square-style .mini-track {
   stroke-linecap: butt;
 }
 .ring-label {
@@ -570,251 +584,6 @@ body.square-style .aida-big-track {
   letter-spacing: 1.5px;
 }
 
-/* ---------- AIDA64-style model ---------- */
-
-.dashboard-aida:not([hidden]) {
-  flex: 1 1 auto;
-  min-height: 0;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: minmax(0, 0.62fr) minmax(0, 1fr);
-  gap: calc(1vh * var(--density)) calc(1vw * var(--density));
-  padding: calc(0.6vh * var(--density)) calc(1.2vw * var(--density)) calc(1.2vh * var(--density));
-}
-
-.aida-card {
-  background: var(--card-bg);
-  border: 1px solid var(--card-border);
-  border-radius: var(--radius);
-  padding: calc(0.9vh * var(--density)) calc(1.1vw * var(--density));
-  min-height: 0;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.aida-strip-title {
-  text-align: center;
-  font-size: calc(clamp(10px, 1.7vh, 17px) * var(--font-scale));
-  font-weight: 700;
-  letter-spacing: 1.5px;
-  color: var(--text-primary);
-  margin-bottom: calc(0.6vh * var(--density));
-}
-
-.aida-strip-body {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  align-items: stretch;
-  gap: calc(0.8vw * var(--density));
-}
-
-/* Gauges (3/4 arc). Sized by the available row height so they never overflow
-   or collide with the neighbouring row. */
-.aida-gauge {
-  position: relative;
-  height: 100%;
-  aspect-ratio: 1;
-  width: auto;
-  max-width: 38%;
-  flex-shrink: 0;
-}
-.aida-gauge svg {
-  width: 100%;
-  height: 100%;
-}
-.aida-gauge-track {
-  fill: none;
-  stroke: var(--track);
-  stroke-width: calc(8 * var(--ring-thickness));
-  stroke-linecap: round;
-}
-/* Butt caps: a round cap on a near-zero arc renders as a fat dot. */
-.aida-gauge-fill {
-  fill: none;
-  stroke: var(--accent);
-  stroke-width: calc(8 * var(--ring-thickness));
-  stroke-linecap: butt;
-  transition: stroke-dashoffset 0.4s ease;
-}
-.aida-gauge-label {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 1px;
-}
-.aida-gauge-value {
-  font-size: calc(clamp(10px, 1.7vh, 17px) * var(--font-scale));
-  font-weight: 700;
-  color: var(--text-primary);
-  line-height: 1.1;
-  letter-spacing: -0.3px;
-}
-.aida-gauge-caption {
-  font-size: calc(clamp(8px, 1.25vh, 12px) * var(--font-scale));
-  color: var(--text-muted);
-  line-height: 1.1;
-}
-
-/* Sparkline graphs */
-.aida-graph {
-  position: relative;
-  flex: 1;
-  min-width: 0;
-  height: 100%;
-  border: 1px solid var(--card-border);
-  border-radius: calc(var(--radius) / 4);
-  background: rgba(255, 255, 255, 0.015);
-  overflow: hidden;
-}
-.aida-graph svg {
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-.aida-line {
-  fill: none;
-  stroke: var(--accent);
-  stroke-width: 1.4;
-  vector-effect: non-scaling-stroke;
-}
-.aida-graph-max,
-.aida-graph-min {
-  position: absolute;
-  left: 3px;
-  font-size: calc(clamp(7px, 1.1vh, 11px) * var(--font-scale));
-  color: var(--text-muted);
-  pointer-events: none;
-}
-.aida-graph-max { top: 1px; }
-.aida-graph-min { bottom: 1px; }
-
-/* Device cards (CPU / GPU) */
-.aida-device-head {
-  display: flex;
-  align-items: center;
-  gap: calc(0.6vw * var(--density));
-  font-size: calc(clamp(12px, 2.1vh, 21px) * var(--font-scale));
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: calc(0.6vh * var(--density));
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.aida-device-head .icon {
-  width: calc(clamp(16px, 2.6vh, 28px) * var(--font-scale) * var(--icon-scale));
-  height: calc(clamp(16px, 2.6vh, 28px) * var(--font-scale) * var(--icon-scale));
-  color: var(--text-muted);
-  flex-shrink: 0;
-  display: inline-flex;
-}
-.aida-device-head .icon svg {
-  width: 100%;
-  height: 100%;
-}
-
-.aida-device-body {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  align-items: center;
-  gap: calc(1vw * var(--density));
-}
-
-.aida-big-gauge {
-  position: relative;
-  height: 100%;
-  aspect-ratio: 1;
-  width: auto;
-  max-width: 42%;
-  flex-shrink: 0;
-}
-.aida-big-gauge svg {
-  width: 100%;
-  height: 100%;
-}
-.aida-big-track {
-  fill: none;
-  stroke: var(--track);
-  stroke-width: calc(9 * var(--ring-thickness));
-  stroke-linecap: round;
-}
-.aida-big-fill {
-  fill: none;
-  stroke: var(--accent);
-  stroke-width: calc(9 * var(--ring-thickness));
-  stroke-linecap: butt;
-  transition: stroke-dashoffset 0.4s ease;
-}
-.aida-big-label {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-.aida-big-number {
-  display: flex;
-  align-items: baseline;
-}
-.aida-big-number span:first-child {
-  font-size: calc(clamp(22px, 4.2vh, 46px) * var(--font-scale));
-  font-weight: 300;
-  line-height: 1;
-}
-.aida-big-pct {
-  font-size: calc(clamp(12px, 2.2vh, 22px) * var(--font-scale));
-  color: var(--accent);
-  font-weight: 600;
-  margin-left: 2px;
-}
-.aida-big-caption {
-  font-size: calc(clamp(9px, 1.5vh, 15px) * var(--font-scale));
-  color: var(--text-muted);
-  margin-top: 3px;
-}
-
-.aida-rows {
-  flex: 1;
-  min-width: 0;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: calc(0.7vh * var(--density));
-}
-.aida-row {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  align-items: stretch;
-  gap: calc(0.7vw * var(--density));
-}
-
-/* Storage strip */
-.aida-storage-body {
-  flex-direction: column;
-  align-items: stretch;
-  justify-content: center;
-  gap: calc(0.7vh * var(--density));
-}
-.aida-storage-row {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: 0.7vw;
-}
-.aida-storage-row .storage-name,
-.aida-storage-row .storage-pct {
-  font-size: calc(clamp(10px, 1.6vh, 16px) * var(--font-scale));
-}
-
 /* ---------- Temperatures-only model ---------- */
 
 /* Two readouts (caption over number), side by side (data-layout="row") or
@@ -959,7 +728,7 @@ body.square-style .aida-big-track {
 @media (max-aspect-ratio: 1/1) {
   .dashboard:not([hidden]) {
     grid-template-columns: 1fr;
-    grid-template-rows: repeat(5, minmax(0, 1fr));
+    grid-template-rows: repeat(var(--full-count, 5), minmax(0, 1fr));
   }
   .card-cpu, .card-gpu, .card-ram, .card-net, .card-storage {
     grid-column: 1 / 2;
@@ -1223,3 +992,275 @@ body.model-glass .topbar {
 .glass-drive b { font-weight: 650; font-variant-numeric: tabular-nums; }
 
 body.square-style .glass-card { border-radius: 0; }
+
+/* ---------- AMOLED model ---------- */
+
+/* Same card positions as Glass, drawn for OLED screens: pure black, hairline
+   outlines instead of filled cards, light type and thin accent strokes, so as
+   few pixels as possible are lit (less power, less heat, true black). */
+.dashboard-amoled:not([hidden]) {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-rows: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: calc(1.8vh * var(--density)) calc(1.4vw * var(--density));
+  padding: calc(1vh * var(--density)) calc(1.8vw * var(--density)) calc(2.2vh * var(--density));
+}
+
+.am-card {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: calc(2vh * var(--density)) calc(1.4vw * var(--density));
+  color: var(--text-primary);
+  border: 1px solid #1c1c21;
+  border-radius: var(--radius);
+  background: transparent;
+  overflow: hidden;
+}
+.am-big { grid-row: 1; }
+.am-cpu { grid-column: 1 / 3; }
+.am-gpu { grid-column: 3 / 5; }
+.am-small { grid-row: 2; }
+
+.am-head {
+  display: flex;
+  align-items: center;
+  gap: 0.6vw;
+  min-width: 0;
+  font-size: calc(clamp(11px, 2.1vh, 20px) * var(--font-scale));
+}
+.am-icon {
+  display: inline-flex;
+  width: calc(1.3em * var(--icon-scale));
+  height: calc(1.3em * var(--icon-scale));
+  flex-shrink: 0;
+  color: var(--accent);
+}
+.am-icon svg { width: 100%; height: 100%; }
+.am-label {
+  font-weight: 600;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.am-name {
+  margin-left: auto;
+  color: #4a4a52;
+  font-size: 0.85em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.am-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  gap: 2.4vw;
+}
+.am-ring {
+  height: 92%;
+  max-height: 100%;
+  aspect-ratio: 1;
+  flex-shrink: 0;
+  overflow: visible;
+}
+.am-ring-track,
+.am-ring-fill {
+  fill: none;
+  stroke-width: calc(3.5 * var(--ring-thickness));
+}
+.am-ring-track { stroke: #17171c; }
+.am-ring-fill {
+  stroke: url(#accentGradient);
+  stroke-linecap: round;
+  transform: rotate(-90deg);
+  transform-origin: 60px 60px;
+}
+.am-ring-value {
+  font-size: 32px;
+  font-weight: 300;
+  fill: var(--text-primary);
+  text-anchor: middle;
+  dominant-baseline: middle;
+  letter-spacing: -1px;
+}
+.am-ring-pct {
+  font-size: 0.45em;
+  fill: var(--text-muted);
+}
+.am-ring-caption {
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 3px;
+  fill: #55555d;
+  text-anchor: middle;
+}
+
+.am-stats {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2vh;
+}
+.am-temp {
+  font-size: calc(clamp(40px, 13vh, 130px) * var(--font-scale));
+  font-weight: 200;
+  line-height: 1;
+  letter-spacing: -2px;
+  font-variant-numeric: tabular-nums;
+}
+.am-temp small {
+  font-size: 0.34em;
+  font-weight: 400;
+  color: var(--accent);
+  vertical-align: top;
+  letter-spacing: 0;
+  margin-left: 0.1em;
+}
+.am-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1vw;
+  padding-top: 1vh;
+  border-top: 1px solid #1c1c21;
+  font-size: calc(clamp(12px, 2.3vh, 23px) * var(--font-scale));
+  white-space: nowrap;
+}
+.am-row span { color: #6b6b74; }
+.am-row b { font-weight: 500; font-variant-numeric: tabular-nums; }
+
+.am-value {
+  margin-top: auto;
+  font-size: calc(clamp(28px, 8.5vh, 84px) * var(--font-scale));
+  font-weight: 200;
+  line-height: 1;
+  letter-spacing: -1px;
+  font-variant-numeric: tabular-nums;
+}
+.am-value small {
+  font-size: 0.42em;
+  color: var(--accent);
+  margin-left: 0.08em;
+}
+.am-sub {
+  margin-top: 0.6vh;
+  font-size: calc(clamp(11px, 2vh, 20px) * var(--font-scale));
+  color: #6b6b74;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.am-bar {
+  margin-top: 1.4vh;
+  height: calc(0.35vh * var(--bar-thickness) + 1px);
+  border-radius: 99px;
+  background: #17171c;
+  overflow: hidden;
+}
+.am-bar i {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+}
+
+.am-net-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6vw;
+  font-size: calc(clamp(18px, 4.6vh, 46px) * var(--font-scale));
+  font-weight: 300;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.am-net-row:first-of-type { margin-top: auto; }
+.am-net-row + .am-net-row {
+  margin-top: 0.6vh;
+  font-size: calc(clamp(14px, 3vh, 30px) * var(--font-scale));
+  color: #6b6b74;
+}
+.am-arrow { color: var(--accent); font-size: 0.8em; }
+
+.am-drives {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.3vh;
+}
+.am-drive {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.7vw;
+  font-size: calc(clamp(11px, 2vh, 20px) * var(--font-scale));
+}
+.am-drive span { color: #6b6b74; }
+.am-drive .am-bar { margin: 0; }
+.am-drive b { font-weight: 500; font-variant-numeric: tabular-nums; }
+
+body.square-style .am-card { border-radius: 0; }
+body.square-style .am-ring-fill,
+body.square-style .am-ring-track { stroke-linecap: butt; }
+/* With a video or picture behind, the outline alone would vanish into it. */
+body.bg-always .am-card { border-color: rgba(255, 255, 255, 0.18); background: rgba(0, 0, 0, 0.45); }
+
+/* ---------- Afterburner model (lines of text) ---------- */
+
+.dashboard-osd:not([hidden]) {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  padding: 2vh 2vw;
+  align-items: flex-start;
+  justify-content: flex-start;
+}
+.dashboard-osd[data-valign="center"] { align-items: center; }
+.dashboard-osd[data-valign="bottom"] { align-items: flex-end; }
+.dashboard-osd[data-align="center"] { justify-content: center; }
+.dashboard-osd[data-align="right"] { justify-content: flex-end; }
+
+.osd-lines {
+  width: max-content;
+  max-width: 100%;
+  font-size: 20px;
+  line-height: 1.22;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  /* Hard edge, as on a game overlay: nothing blurred or shadowed. */
+  text-shadow: 0 0 2px #000;
+}
+.osd-line {
+  display: flex;
+  align-items: baseline;
+  gap: 0.9em;
+}
+.osd-label {
+  min-width: 3.4em;
+  font-weight: 700;
+  color: var(--accent);
+}
+.osd-item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.2em;
+  color: var(--text-primary);
+}
+.osd-item b { font-weight: 700; display: inline-block; text-align: right; }
+.osd-item i,
+.osd-item small {
+  font-style: normal;
+  font-size: 0.62em;
+  color: var(--text-muted);
+}
+.osd-item small { margin-right: 0.15em; }
+.osd-na b { color: var(--text-muted); font-weight: 400; }

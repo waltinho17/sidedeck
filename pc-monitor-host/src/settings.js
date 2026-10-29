@@ -1,92 +1,47 @@
-import { t, setLanguage, translatePage } from "./i18n.js";
+import { t, setLanguage, translatePage, getLanguage } from "./i18n.js";
 
 const { invoke } = window.__TAURI__.core;
 
 const ADB_POLL_INTERVAL_MS = 3000;
 const PHONE_POLL_INTERVAL_MS = 4000;
 
-const COLOR_PRESETS = {
-  orange: {
-    background: "#0a0a0a",
-    card_background: "#111111",
-    text_color: "#f5f5f5",
-    muted_color: "#8a8a8a",
-    accent_color: "#ff7a1a",
-    accent_color_2: "#ff7a1a",
-  },
-  pink: {
-    background: "#0d0d10",
-    card_background: "#16161a",
-    text_color: "#f0f0f5",
-    muted_color: "#9090a0",
-    accent_color: "#ff2d78",
-    accent_color_2: "#00e0ff",
-  },
-  red: {
-    background: "#000000",
-    card_background: "#0f0f0f",
-    text_color: "#eaeaea",
-    muted_color: "#7a7a7a",
-    accent_color: "#e6231e",
-    accent_color_2: "#e6231e",
-  },
-  purple: {
-    background: "#0a0710",
-    card_background: "#151020",
-    text_color: "#f2eefc",
-    muted_color: "#9086ad",
-    accent_color: "#8b2fd9",
-    accent_color_2: "#ff3fa4",
-  },
-  green: {
-    background: "#060a07",
-    card_background: "#0d1410",
-    text_color: "#eaf5ec",
-    muted_color: "#7d9184",
-    accent_color: "#2fe06a",
-    accent_color_2: "#9fff5e",
-  },
-  blue: {
-    background: "#06080f",
-    card_background: "#0e1220",
-    text_color: "#e9eeff",
-    muted_color: "#7f89a8",
-    accent_color: "#2f7dff",
-    accent_color_2: "#00d4ff",
-  },
-  teal: {
-    background: "#040d0e",
-    card_background: "#0c1a1c",
-    text_color: "#e6f7f8",
-    muted_color: "#789396",
-    accent_color: "#14d1c4",
-    accent_color_2: "#4affd0",
-  },
-  amber: {
-    background: "#0c0904",
-    card_background: "#17120a",
-    text_color: "#f8f0e2",
-    muted_color: "#9c8d74",
-    accent_color: "#ffb020",
-    accent_color_2: "#ff7a1a",
-  },
-  ice: {
-    background: "#080b10",
-    card_background: "#121722",
-    text_color: "#f2f6ff",
-    muted_color: "#8794ab",
-    accent_color: "#7fc8ff",
-    accent_color_2: "#c9e8ff",
-  },
-  mono: {
-    background: "#0a0a0a",
-    card_background: "#151515",
-    text_color: "#f5f5f5",
-    muted_color: "#8a8a8a",
-    accent_color: "#e4e4e4",
-    accent_color_2: "#9a9a9a",
-  },
-};
+// Ready-made palettes. `name` is [pt, en]; the dots show background, card,
+// accent and second accent.
+const COLOR_PRESETS = [
+  { id: "orange", name: ["Laranja", "Orange"], background: "#0a0a0a", card_background: "#111111", text_color: "#f5f5f5", muted_color: "#8a8a8a", accent_color: "#ff7a1a", accent_color_2: "#ff7a1a" },
+  { id: "pink", name: ["Pink / Ciano", "Pink / Cyan"], background: "#0d0d10", card_background: "#16161a", text_color: "#f0f0f5", muted_color: "#9090a0", accent_color: "#ff2d78", accent_color_2: "#00e0ff" },
+  { id: "red", name: ["Raiden Red", "Raiden Red"], background: "#000000", card_background: "#0f0f0f", text_color: "#eaeaea", muted_color: "#7a7a7a", accent_color: "#e6231e", accent_color_2: "#e6231e" },
+  { id: "purple", name: ["Roxo / Rosa", "Purple / Pink"], background: "#0a0710", card_background: "#151020", text_color: "#f2eefc", muted_color: "#9086ad", accent_color: "#8b2fd9", accent_color_2: "#ff3fa4" },
+  { id: "green", name: ["Verde Neon", "Neon Green"], background: "#060a07", card_background: "#0d1410", text_color: "#eaf5ec", muted_color: "#7d9184", accent_color: "#2fe06a", accent_color_2: "#9fff5e" },
+  { id: "blue", name: ["Azul Elétrico", "Electric Blue"], background: "#06080f", card_background: "#0e1220", text_color: "#e9eeff", muted_color: "#7f89a8", accent_color: "#2f7dff", accent_color_2: "#00d4ff" },
+  { id: "teal", name: ["Turquesa", "Turquoise"], background: "#040d0e", card_background: "#0c1a1c", text_color: "#e6f7f8", muted_color: "#789396", accent_color: "#14d1c4", accent_color_2: "#4affd0" },
+  { id: "amber", name: ["Âmbar", "Amber"], background: "#0c0904", card_background: "#17120a", text_color: "#f8f0e2", muted_color: "#9c8d74", accent_color: "#ffb020", accent_color_2: "#ff7a1a" },
+  { id: "ice", name: ["Gelo", "Ice"], background: "#080b10", card_background: "#121722", text_color: "#f2f6ff", muted_color: "#8794ab", accent_color: "#7fc8ff", accent_color_2: "#c9e8ff" },
+  { id: "mono", name: ["Monocromático", "Monochrome"], background: "#0a0a0a", card_background: "#151515", text_color: "#f5f5f5", muted_color: "#8a8a8a", accent_color: "#e4e4e4", accent_color_2: "#9a9a9a" },
+
+  { id: "cyberpunk", name: ["Cyberpunk", "Cyberpunk"], background: "#0b0b14", card_background: "#14141f", text_color: "#fffbe6", muted_color: "#8a86a8", accent_color: "#fcee0a", accent_color_2: "#00f0ff" },
+  { id: "synthwave", name: ["Synthwave", "Synthwave"], background: "#120a24", card_background: "#1d1238", text_color: "#f6e8ff", muted_color: "#9b86c4", accent_color: "#ff2a6d", accent_color_2: "#05d9e8" },
+  { id: "matrix", name: ["Matrix", "Matrix"], background: "#000a00", card_background: "#041204", text_color: "#c8ffd0", muted_color: "#4f8f5a", accent_color: "#00ff41", accent_color_2: "#008f11" },
+  { id: "sunset", name: ["Pôr do sol", "Sunset"], background: "#12080c", card_background: "#1e0f14", text_color: "#ffeee6", muted_color: "#b08a85", accent_color: "#ff5e3a", accent_color_2: "#ffb347" },
+  { id: "ocean", name: ["Oceano", "Ocean"], background: "#03111a", card_background: "#082030", text_color: "#e4f4ff", muted_color: "#6f94ab", accent_color: "#00b4d8", accent_color_2: "#90e0ef" },
+  { id: "aurora", name: ["Aurora boreal", "Northern lights"], background: "#050b14", card_background: "#0b1622", text_color: "#e8fff8", muted_color: "#6f9a94", accent_color: "#3dffb0", accent_color_2: "#6a5cff" },
+  { id: "bloodmoon", name: ["Lua de sangue", "Blood moon"], background: "#080000", card_background: "#140505", text_color: "#ffe9e9", muted_color: "#a07070", accent_color: "#ff1f3d", accent_color_2: "#ff6a00" },
+  { id: "gold", name: ["Ouro", "Gold"], background: "#050505", card_background: "#0f0d08", text_color: "#f7efd8", muted_color: "#9a8f70", accent_color: "#d4af37", accent_color_2: "#f6e27a" },
+  { id: "candy", name: ["Algodão-doce", "Cotton candy"], background: "#0e0a14", card_background: "#181124", text_color: "#fdf0ff", muted_color: "#a898b8", accent_color: "#ff77e1", accent_color_2: "#77e1ff" },
+
+  { id: "dracula", name: ["Dracula", "Dracula"], background: "#1e1f29", card_background: "#282a36", text_color: "#f8f8f2", muted_color: "#8b93bd", accent_color: "#bd93f9", accent_color_2: "#ff79c6" },
+  { id: "nord", name: ["Nord", "Nord"], background: "#242933", card_background: "#2e3440", text_color: "#eceff4", muted_color: "#8c9bb5", accent_color: "#88c0d0", accent_color_2: "#b48ead" },
+  { id: "tokyo", name: ["Tokyo Night", "Tokyo Night"], background: "#16161e", card_background: "#1a1b26", text_color: "#c0caf5", muted_color: "#7a84b8", accent_color: "#7aa2f7", accent_color_2: "#bb9af7" },
+  { id: "catppuccin", name: ["Catppuccin", "Catppuccin"], background: "#11111b", card_background: "#1e1e2e", text_color: "#cdd6f4", muted_color: "#9399b2", accent_color: "#cba6f7", accent_color_2: "#89b4fa" },
+  { id: "rosepine", name: ["Rosé Pine", "Rosé Pine"], background: "#191724", card_background: "#1f1d2e", text_color: "#e0def4", muted_color: "#908caa", accent_color: "#ebbcba", accent_color_2: "#c4a7e7" },
+  { id: "gruvbox", name: ["Gruvbox", "Gruvbox"], background: "#1d2021", card_background: "#282828", text_color: "#ebdbb2", muted_color: "#a89984", accent_color: "#fabd2f", accent_color_2: "#fe8019" },
+  { id: "monokai", name: ["Monokai", "Monokai"], background: "#1e1f1c", card_background: "#272822", text_color: "#f8f8f2", muted_color: "#a59f85", accent_color: "#a6e22e", accent_color_2: "#f92672" },
+  { id: "solarized", name: ["Solarized", "Solarized"], background: "#002b36", card_background: "#073642", text_color: "#eee8d5", muted_color: "#93a1a1", accent_color: "#b58900", accent_color_2: "#2aa198" },
+
+  { id: "teamgreen", name: ["Verde NVIDIA", "NVIDIA green"], background: "#0a0a0a", card_background: "#141414", text_color: "#f2f2f2", muted_color: "#8a8a8a", accent_color: "#76b900", accent_color_2: "#a6e22e" },
+  { id: "teamred", name: ["Vermelho AMD", "AMD red"], background: "#0a0a0a", card_background: "#141414", text_color: "#f2f2f2", muted_color: "#8a8a8a", accent_color: "#ed1c24", accent_color_2: "#ff6b00" },
+  { id: "teamblue", name: ["Azul Intel", "Intel blue"], background: "#06090f", card_background: "#0f141c", text_color: "#eef4fb", muted_color: "#8190a5", accent_color: "#0071c5", accent_color_2: "#00c7fd" },
+];
 
 // Screensaver timing choices, in seconds.
 const INTERVAL_OPTIONS = [60, 120, 180, 300, 600, 900, 1800];
@@ -98,7 +53,7 @@ function durationLabel(seconds) {
   return t("time.mins", { n: seconds / 60 });
 }
 
-const MODELS = ["full", "minimal", "aida", "temps", "glass"];
+const MODELS = ["full", "minimal", "amoled", "temps", "glass", "osd"];
 
 let currentSettings = null;
 /** Which model's theme/display the Layout and Aparência tabs are editing. */
@@ -184,6 +139,16 @@ function renderModelStage() {
   document.querySelectorAll(".model-card").forEach((card) => {
     card.classList.toggle("previewing", card.dataset.model === previewModel);
     card.classList.toggle("in-use", card.dataset.model === activeModel);
+    const used = card.dataset.model === activeModel;
+    const state = card.querySelector(".model-card-state");
+    if (state) {
+      state.hidden = !used;
+      state.textContent = t("models.applyShort");
+      const apply = card.querySelector(".model-card-btn.primary");
+      apply.hidden = used;
+      apply.textContent = t("models.apply");
+      card.querySelector(".model-card-btn.ghost-btn").textContent = t("models.browserShort");
+    }
   });
 }
 
@@ -214,6 +179,37 @@ function setModelStatus(text, isError = false) {
 
 function initModelGallery() {
   document.querySelectorAll(".model-card").forEach((card) => {
+    // Per-card actions, so a model can be applied or opened without going
+    // down to the big preview.
+    const name = card.querySelector(".model-card-name");
+    const bar = document.createElement("div");
+    bar.className = "model-card-bar";
+    const state = document.createElement("span");
+    state.className = "model-card-state";
+    state.textContent = t("models.applyShort");
+    const apply = document.createElement("button");
+    apply.type = "button";
+    apply.className = "primary model-card-btn";
+    apply.textContent = t("models.apply");
+    apply.addEventListener("click", (event) => {
+      event.stopPropagation();
+      useModel(card.dataset.model);
+    });
+    const browser = document.createElement("button");
+    browser.type = "button";
+    browser.className = "ghost-btn model-card-btn";
+    browser.textContent = t("models.browserShort");
+    browser.title = t("models.browserTip");
+    browser.addEventListener("click", async (event) => {
+      event.stopPropagation();
+      try {
+        await invoke("open_preview", { model: card.dataset.model });
+      } catch (err) {
+        console.error("Failed to open preview", err);
+      }
+    });
+    bar.append(name, state, apply, browser);
+    card.appendChild(bar);
     card.addEventListener("click", () => {
       previewModel = card.dataset.model;
       setModelStatus("");
@@ -291,6 +287,7 @@ function initSliders() {
     bindSlider("temps-margin", percent),
     bindSlider("video-overlay", percent),
     bindSlider("glass-blur", percent),
+    bindSlider("osd-scale", percent),
     bindSlider("glass-opacity", percent),
     bindSlider("update-interval", (v) => `${v} ms`),
   ];
@@ -335,7 +332,10 @@ const MINI_SENSOR_OPTIONS = [
 ];
 const CPU_STAT_OPTIONS = ["temp", "clock", "power"];
 const GPU_STAT_OPTIONS = ["temp", "clock", "power", "fan", "vram"];
+// Lines of the Afterburner model's own layout (OSD_LINES in main.js).
+const OSD_LINE_OPTIONS = ["cpu", "gpu", "vram", "ram", "fps", "net", "disk"];
 const SENSOR_LISTS = {
+  "osd-line-list": { keys: OSD_LINE_OPTIONS, prefix: "osdline" },
   "cpu-stat-list": { keys: CPU_STAT_OPTIONS, prefix: "stat" },
   "gpu-stat-list": { keys: GPU_STAT_OPTIONS, prefix: "stat" },
 };
@@ -538,20 +538,154 @@ function startMiniDrag(event, tile) {
 
 /* ---------- Presets ---------- */
 
-function initPresets() {
-  document.querySelectorAll(".preset-btn").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const preset = COLOR_PRESETS[btn.dataset.preset];
-      if (!preset) return;
-      el("color-bg").value = preset.background;
-      el("color-card").value = preset.card_background;
-      el("color-text").value = preset.text_color;
-      el("color-muted").value = preset.muted_color;
-      el("color-accent").value = preset.accent_color;
-      el("color-accent-2").value = preset.accent_color_2;
-      markDirty();
+function applyPreset(preset) {
+  el("color-bg").value = preset.background;
+  el("color-card").value = preset.card_background;
+  el("color-text").value = preset.text_color;
+  el("color-muted").value = preset.muted_color;
+  el("color-accent").value = preset.accent_color;
+  el("color-accent-2").value = preset.accent_color_2;
+  markDirty();
+}
+
+/** Builds the palette buttons in the current language. */
+function renderPresets() {
+  const row = el("preset-row");
+  row.innerHTML = "";
+  const index = getLanguage() === "en" ? 1 : 0;
+  for (const preset of COLOR_PRESETS) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "preset-btn";
+    btn.dataset.preset = preset.id;
+    const dots = document.createElement("span");
+    dots.className = "preset-dots";
+    for (const color of [preset.background, preset.card_background, preset.accent_color, preset.accent_color_2]) {
+      const dot = document.createElement("i");
+      dot.style.background = color;
+      dots.appendChild(dot);
+    }
+    const label = document.createElement("span");
+    label.textContent = preset.name[index];
+    btn.append(dots, label);
+    btn.addEventListener("click", () => applyPreset(preset));
+    row.appendChild(btn);
+  }
+}
+
+function hexToHsv(hex) {
+  const n = parseInt(hex.slice(1), 16);
+  const [r, g, b] = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => v / 255);
+  const max = Math.max(r, g, b);
+  const delta = max - Math.min(r, g, b);
+  let h = 0;
+  if (delta) {
+    if (max === r) h = 60 * (((g - b) / delta) % 6);
+    else if (max === g) h = 60 * ((b - r) / delta + 2);
+    else h = 60 * ((r - g) / delta + 4);
+  }
+  return [(h + 360) % 360, max ? delta / max : 0, max];
+}
+
+function hsvToHex(h, s, v) {
+  const f = (n) => {
+    const k = (n + h / 60) % 6;
+    return v - v * s * Math.max(0, Math.min(k, 4 - k, 1));
+  };
+  return "#" + [f(5), f(3), f(1)].map((x) => Math.round(x * 255).toString(16).padStart(2, "0")).join("");
+}
+
+/** Reads the colors lit on the PC's RGB devices through OpenRGB's SDK server
+ *  and builds a dark palette around them. */
+async function importOpenRgb() {
+  const btn = el("openrgb-btn");
+  const status = el("openrgb-status");
+  btn.disabled = true;
+  status.style.color = "";
+  status.textContent = t("openrgb.reading");
+  try {
+    const rgb = await invoke("get_openrgb_palette");
+    const [hue, sat] = hexToHsv(rgb.accent);
+    applyPreset({
+      background: hsvToHex(hue, Math.min(sat, 0.6), 0.04),
+      card_background: hsvToHex(hue, Math.min(sat, 0.5), 0.09),
+      text_color: "#f2f2f2",
+      muted_color: hsvToHex(hue, 0.12, 0.62),
+      accent_color: rgb.accent,
+      accent_color_2: rgb.accent_2,
     });
+    status.textContent = t("openrgb.done", { n: rgb.devices });
+  } catch (err) {
+    status.style.color = "var(--err)";
+    status.textContent = String(err);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+/* ---------- Version + update check ---------- */
+
+const RELEASES_API = "https://api.github.com/repos/waltinho17/sidedeck/releases/latest";
+
+/** "v1.4.0" -> [1, 4, 0] */
+function parseVersion(text) {
+  return String(text).replace(/^v/i, "").split(".").map((n) => parseInt(n, 10) || 0);
+}
+
+function isNewer(latest, current) {
+  const a = parseVersion(latest);
+  const b = parseVersion(current);
+  for (let i = 0; i < Math.max(a.length, b.length); i++) {
+    if ((a[i] || 0) !== (b[i] || 0)) return (a[i] || 0) > (b[i] || 0);
+  }
+  return false;
+}
+
+let appVersion = "";
+let releaseUrl = "";
+
+async function checkForUpdate(manual = false) {
+  const label = el("app-version");
+  const button = el("update-btn");
+  try {
+    const response = await fetch(RELEASES_API, { headers: { Accept: "application/vnd.github+json" } });
+    if (!response.ok) throw new Error(String(response.status));
+    const release = await response.json();
+    const latest = String(release.tag_name || "");
+    if (latest && isNewer(latest, appVersion)) {
+      releaseUrl = release.html_url;
+      button.textContent = t("update.available", { version: latest.replace(/^v/i, "") });
+      button.hidden = false;
+    } else if (manual) {
+      label.title = t("update.latest");
+      el("save-feedback").textContent = t("update.latest");
+    }
+  } catch (err) {
+    // Offline, no release published yet or rate limited: stay quiet unless asked.
+    if (manual) el("save-feedback").textContent = t("update.failed");
+  }
+}
+
+async function initVersion() {
+  try {
+    appVersion = await window.__TAURI__.app.getVersion();
+  } catch (err) {
+    return;
+  }
+  const label = el("app-version");
+  label.textContent = `SideDeck v${appVersion}`;
+  label.title = t("update.check");
+  label.style.cursor = "pointer";
+  label.addEventListener("click", () => checkForUpdate(true));
+  el("update-btn").addEventListener("click", () => {
+    if (releaseUrl) invoke("plugin:opener|open_url", { url: releaseUrl });
   });
+  checkForUpdate();
+}
+
+function initPresets() {
+  renderPresets();
+  el("openrgb-btn").addEventListener("click", importOpenRgb);
 }
 
 /* ---------- Dirty state ---------- */
@@ -589,8 +723,9 @@ function applyModelToForm(model) {
   setSegmented("seg-temps-spacing", display.temps_spacing || "together");
   setSegmented("seg-temps-style", display.temps_style || "numbers");
   setSegmented("seg-temps-caption", display.temps_caption || (display.temps_show_captions === false ? "none" : "above"));
-  el("glass-blur").value = display.glass_blur ?? 1;
+  el("glass-blur").value = display.glass_blur ?? 0;
   el("glass-opacity").value = display.glass_opacity ?? 0.35;
+  el("glass-frost").checked = display.glass_frost === true;
   el("glass-animated-bg").checked = display.glass_animated_bg !== false;
   el("temps-cpu-scale").value = display.temps_cpu_scale ?? 1;
   el("temps-gpu-scale").value = display.temps_gpu_scale ?? 1;
@@ -599,6 +734,14 @@ function applyModelToForm(model) {
   renderMiniEditor();
   renderSensorList("cpu-stat-list", display.cpu_stats);
   renderSensorList("gpu-stat-list", display.gpu_stats);
+  renderSensorList("osd-line-list", display.osd_lines || ["cpu", "gpu", "ram", "fps"]);
+  setSegmented("seg-osd-source", display.osd_source || "afterburner");
+  setSegmented("seg-osd-align", display.osd_align || "left");
+  setSegmented("seg-osd-valign", display.osd_valign || "top");
+  el("osd-scale").value = display.osd_scale ?? 1;
+  document.querySelectorAll(".osd-label-input").forEach((input) => {
+    input.value = (display.osd_labels || {})[input.dataset.key] || "";
+  });
   el("temps-show-unit").checked = display.temps_show_unit !== false;
   setSegmented("seg-clock-format", display.clock_format);
   setSegmented("seg-clock-position", display.clock_position);
@@ -656,11 +799,22 @@ function readModelFromForm() {
       mini_sensors: [...miniSensors],
       cpu_stats: readSensorList("cpu-stat-list"),
       gpu_stats: readSensorList("gpu-stat-list"),
+      osd_lines: readSensorList("osd-line-list"),
+      osd_source: getSegmented("seg-osd-source", "afterburner"),
+      osd_align: getSegmented("seg-osd-align", "left"),
+      osd_valign: getSegmented("seg-osd-valign", "top"),
+      osd_scale: Number(el("osd-scale").value) || 1,
+      osd_labels: Object.fromEntries(
+        [...document.querySelectorAll(".osd-label-input")]
+          .map((input) => [input.dataset.key, input.value.trim()])
+          .filter(([, value]) => value)
+      ),
       temps_style: getSegmented("seg-temps-style", "numbers"),
       temps_caption: getSegmented("seg-temps-caption", "above"),
       temps_show_captions: getSegmented("seg-temps-caption", "above") !== "none",
       glass_blur: Number(el("glass-blur").value),
       glass_opacity: Number(el("glass-opacity").value),
+      glass_frost: el("glass-frost").checked,
       glass_animated_bg: el("glass-animated-bg").checked,
       temps_show_unit: el("temps-show-unit").checked,
       freq_unit: getSegmented("seg-freq-unit", "mhz"),
@@ -699,6 +853,7 @@ function applySettingsToForm(settings) {
   el("ss-show-temps").checked = settings.screensaver.show_temps === true;
   setSegmented("seg-temps-corner", settings.screensaver.temps_corner || "bottom-right");
   el("video-overlay").value = settings.screensaver.overlay_opacity ?? 0.35;
+  setSegmented("seg-bg-fit", settings.screensaver.fit || "auto");
   refreshSliderLabels();
   selectClosest("screensaver-interval", settings.screensaver.interval_ms / 1000, INTERVAL_OPTIONS);
   selectClosest("screensaver-duration", settings.screensaver.duration_ms / 1000, DURATION_OPTIONS);
@@ -736,6 +891,7 @@ function readSettingsFromForm() {
       show_temps: el("ss-show-temps").checked,
       temps_corner: getSegmented("seg-temps-corner", "bottom-right"),
       overlay_opacity: Number(el("video-overlay").value),
+      fit: getSegmented("seg-bg-fit", "auto"),
     },
   };
 }
@@ -762,17 +918,24 @@ function createVideoThumb(file, selected) {
   thumb.className = "video-thumb" + (selected ? " selected" : "");
   thumb.dataset.file = file;
 
-  const video = document.createElement("video");
-  video.muted = true;
-  video.loop = true;
-  video.playsInline = true;
-  video.preload = "metadata";
   // Served by the host's HTTP server, which reads the folder on every
-  // request, so freshly uploaded videos show up without rebuilding the app.
-  video.src = `http://localhost:8080/assets/videos/${encodeURIComponent(file)}`;
-  video.addEventListener("loadedmetadata", () => {
-    video.currentTime = Math.min(1, (video.duration || 2) / 2);
-  }, { once: true });
+  // request, so freshly uploaded files show up without rebuilding the app.
+  const url = `http://localhost:8080/assets/videos/${encodeURIComponent(file)}`;
+  const isImage = IMAGE_FILE.test(file);
+  const video = document.createElement(isImage ? "img" : "video");
+  if (isImage) {
+    video.loading = "lazy";
+    video.src = url;
+  } else {
+    video.muted = true;
+    video.loop = true;
+    video.playsInline = true;
+    video.preload = "metadata";
+    video.src = url;
+    video.addEventListener("loadedmetadata", () => {
+      video.currentTime = Math.min(1, (video.duration || 2) / 2);
+    }, { once: true });
+  }
 
   const name = document.createElement("div");
   name.className = "video-name";
@@ -789,8 +952,10 @@ function createVideoThumb(file, selected) {
   });
 
   thumb.append(video, name, del);
-  thumb.addEventListener("mouseenter", () => video.play().catch(() => {}));
-  thumb.addEventListener("mouseleave", () => video.pause());
+  if (!isImage) {
+    thumb.addEventListener("mouseenter", () => video.play().catch(() => {}));
+    thumb.addEventListener("mouseleave", () => video.pause());
+  }
   thumb.addEventListener("click", () => {
     el("video-gallery").querySelectorAll(".video-thumb").forEach((t) => t.classList.remove("selected"));
     thumb.classList.add("selected");
@@ -840,6 +1005,26 @@ const MAX_VIDEO_MB = 80;
 const MAX_VIDEO_LONG_SIDE = 1920;
 const MAX_VIDEO_SHORT_SIDE = 1080;
 
+const IMAGE_FILE = /\.(jpe?g|png|webp|gif)$/i;
+// Same limit as MAX_IMAGE_BYTES in lib.rs; a 4K picture is already sharper than the phone.
+const MAX_IMAGE_MB = 15;
+const MAX_IMAGE_LONG_SIDE = 3840;
+
+/** Size of a local image file, or null if it can't be decoded here. */
+function probeImage(file) {
+  return new Promise((resolve) => {
+    const url = URL.createObjectURL(file);
+    const image = new Image();
+    const done = (result) => {
+      URL.revokeObjectURL(url);
+      resolve(result);
+    };
+    image.onload = () => done({ width: image.naturalWidth, height: image.naturalHeight });
+    image.onerror = () => done(null);
+    image.src = url;
+  });
+}
+
 /** Resolution of a local video file, or null if it can't be decoded here. */
 function probeVideo(file) {
   return new Promise((resolve) => {
@@ -859,6 +1044,17 @@ function probeVideo(file) {
 
 /** Why `file` can't go to the gallery, or "" if it can. */
 async function videoProblem(file) {
+  if (IMAGE_FILE.test(file.name)) {
+    if (file.size > MAX_IMAGE_MB * 1024 * 1024) {
+      return t("video.imageTooBig", { name: file.name, max: MAX_IMAGE_MB });
+    }
+    const size = await probeImage(file);
+    if (!size || !size.width) return t("video.unsupported", { name: file.name });
+    if (Math.max(size.width, size.height) > MAX_IMAGE_LONG_SIDE) {
+      return t("video.imageTooLarge", { name: file.name, width: size.width, height: size.height, max: MAX_IMAGE_LONG_SIDE });
+    }
+    return "";
+  }
   if (file.size > MAX_VIDEO_MB * 1024 * 1024) {
     return t("video.tooBig", { name: file.name, max: MAX_VIDEO_MB });
   }
@@ -1133,6 +1329,7 @@ async function applyLanguage(setting) {
     renderSensorList(id, readSensorList(id));
   }
   renderMiniEditor();
+  renderPresets();
   updateModelBadges();
   if (el("save-feedback").className === "pending") markDirty();
   refreshAdbStatus();
@@ -1197,6 +1394,7 @@ window.addEventListener("DOMContentLoaded", () => {
   initSegmentedControls();
   initSliders();
   initPresets();
+  initVersion();
   initModelGallery();
   initLanguagePicker();
   fillSelect("screensaver-interval", INTERVAL_OPTIONS);

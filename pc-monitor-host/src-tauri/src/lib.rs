@@ -4,6 +4,7 @@ mod cpu_perf;
 mod gpu_windows;
 mod hardware;
 mod i18n;
+mod integrations;
 mod log;
 mod paths;
 mod phone;
@@ -209,7 +210,11 @@ async fn preview_model_on_phone(state: tauri::State<'_, Arc<AppState>>, model: S
     Ok(())
 }
 
-const VIDEO_EXTENSIONS: [&str; 2] = ["webm", "mp4"];
+/// The gallery holds both kinds of background: videos and still images.
+const VIDEO_EXTENSIONS: [&str; 7] = ["webm", "mp4", "jpg", "jpeg", "png", "webp", "gif"];
+const IMAGE_EXTENSIONS: [&str; 5] = ["jpg", "jpeg", "png", "webp", "gif"];
+/// Images are decoded whole on the phone; anything bigger is just wasted memory.
+const MAX_IMAGE_BYTES: usize = 15 * 1024 * 1024;
 /// Same limit the settings window checks before uploading (with the
 /// resolution): bigger files are hard on the phone and on memory, since the
 /// upload travels whole through the IPC bridge.
@@ -262,7 +267,7 @@ fn add_video(request: tauri::ipc::Request) -> Result<String, String> {
         return Err(i18n::tr("corpo da requisição inválido", "invalid request body").into());
     };
     if bytes.len() > MAX_VIDEO_BYTES {
-        return Err(i18n::tr("vídeo maior que 80 MB", "video larger than 80 MB").into());
+        return Err(i18n::tr("arquivo maior que 80 MB", "file larger than 80 MB").into());
     }
     let raw_name = request
         .headers()
@@ -270,7 +275,23 @@ fn add_video(request: tauri::ipc::Request) -> Result<String, String> {
         .and_then(|v| v.to_str().ok())
         .ok_or(i18n::tr("nome do arquivo ausente", "missing file name"))?;
     let raw_name = percent_decode(raw_name);
-    let name = sanitize_video_name(&raw_name).ok_or(i18n::tr("só arquivos .webm ou .mp4", "only .webm or .mp4 files"))?;
+    store_in_gallery(&raw_name, bytes)
+}
+
+/// Saves `bytes` in the gallery under a safe version of `raw_name` (a numeric
+/// suffix if the name is taken) and returns the name used.
+pub(crate) fn store_in_gallery(raw_name: &str, bytes: &[u8]) -> Result<String, String> {
+    let name = sanitize_video_name(raw_name).ok_or(i18n::tr(
+        "só arquivos .webm, .mp4, .jpg, .png, .webp ou .gif",
+        "only .webm, .mp4, .jpg, .png, .webp or .gif files",
+    ))?;
+    if bytes.len() > MAX_VIDEO_BYTES {
+        return Err(i18n::tr("arquivo maior que 80 MB", "file larger than 80 MB").into());
+    }
+    let is_image = name.rsplit_once('.').is_some_and(|(_, ext)| IMAGE_EXTENSIONS.contains(&ext));
+    if is_image && bytes.len() > MAX_IMAGE_BYTES {
+        return Err(i18n::tr("imagem maior que 15 MB", "image larger than 15 MB").into());
+    }
 
     let dir = paths::videos_dir();
     std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
@@ -386,7 +407,8 @@ pub fn run() {
             get_phone_status,
             install_kiosk_app,
             copy_apk_to_phone,
-            reveal_apk
+            reveal_apk,
+            integrations::get_openrgb_palette
         ])
         .setup(|app| {
             // Paths depend on the resource dir, so everything that serves or

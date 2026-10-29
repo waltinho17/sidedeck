@@ -31,6 +31,8 @@ fn route(path: &str) -> Option<(PathBuf, &'static str)> {
                 Some("webm") => "video/webm",
                 Some("mp4") => "video/mp4",
                 Some("png") => "image/png",
+                Some("webp") => "image/webp",
+                Some("gif") => "image/gif",
                 Some("svg") => "image/svg+xml",
                 Some("jpg") | Some("jpeg") => "image/jpeg",
                 Some("woff2") => "font/woff2",
@@ -90,7 +92,7 @@ async fn write_response(stream: &mut TcpStream, status: &str, content_type: &str
     // Videos are big and never change under the same name; everything else
     // (page, scripts, config) must always be fetched fresh or the phone's
     // WebView keeps running an old version after an update.
-    let cache = if content_type.starts_with("video/") {
+    let cache = if content_type.starts_with("video/") || content_type.starts_with("image/") {
         "max-age=3600"
     } else {
         "no-cache, no-store, must-revalidate"

@@ -1,177 +1,178 @@
 <p align="center">
-  <img src="branding/sidedeck-icon.svg" width="112" alt="SideDeck icon" />
+  <img src="branding/sidedeck-icon.svg" width="112" alt="Ícone do SideDeck" />
 </p>
 
 <h1 align="center">SideDeck</h1>
 
 <p align="center">
-  <b>Turn a spare Android phone into a live hardware monitor for your PC.</b><br />
-  CPU, GPU, RAM, network, storage and FPS on a little screen next to — or inside — your case.<br />
-  Over a USB cable. No Wi-Fi, no account, no cloud.
+  <b>Transforme um celular Android parado num monitor de hardware ao vivo para o seu PC.</b><br />
+  CPU, GPU, RAM, rede, armazenamento e FPS numa telinha ao lado — ou dentro — do gabinete.<br />
+  Pelo cabo USB. Sem Wi-Fi, sem conta, sem nuvem.
 </p>
 
 <p align="center">
-  <a href="https://github.com/waltinho17/sidedeck/releases/latest"><img src="https://img.shields.io/badge/Download-Windows%20installer-ff7a1a?style=for-the-badge" alt="Download the Windows installer" /></a>
+  <a href="https://github.com/waltinho17/sidedeck/releases/latest"><img src="https://img.shields.io/badge/Baixar-instalador%20para%20Windows-ff7a1a?style=for-the-badge" alt="Baixar o instalador para Windows" /></a>
 </p>
 
 <p align="center">
-  <a href="https://github.com/waltinho17/sidedeck/releases/latest"><img src="https://img.shields.io/github/v/release/waltinho17/sidedeck?color=ff7a1a&label=release" alt="Latest release" /></a>
-  <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6" alt="Windows 10 and 11" />
-  <img src="https://img.shields.io/badge/Android-7.0%2B-3DDC84" alt="Android 7.0 or newer" />
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT license" /></a>
+  <a href="https://github.com/waltinho17/sidedeck/releases/latest"><img src="https://img.shields.io/github/v/release/waltinho17/sidedeck?color=ff7a1a&label=vers%C3%A3o" alt="Versão mais recente" /></a>
+  <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6" alt="Windows 10 e 11" />
+  <img src="https://img.shields.io/badge/Android-7.0%2B-3DDC84" alt="Android 7.0 ou mais novo" />
+  <a href="LICENSE"><img src="https://img.shields.io/badge/licen%C3%A7a-MIT-blue" alt="Licença MIT" /></a>
 </p>
 
 <p align="center">
-  <b>English</b> · <a href="README.pt-BR.md">Português</a>
+  <a href="README.en.md">English</a> · <b>Português</b>
 </p>
 
 <p align="center">
-  <img src="docs/images/hero.png" alt="SideDeck panel on a phone" />
+  <img src="docs/images/hero.png" alt="Painel do SideDeck num celular" />
 </p>
 
-## Why
+## Por quê
 
-Screens that show your PC's temperatures — the LCD on some water coolers, the little USB displays made for cases — cost money and do only that. Most people have an old phone in a drawer with a better screen. SideDeck puts it to work: plug it in, pick a look, and it becomes a sensor panel that turns on and off with your PC.
+Telas que mostram as temperaturas do PC — o LCD de alguns water coolers, as telinhas USB feitas para gabinete — custam caro e só fazem isso. Quase todo mundo tem um celular antigo na gaveta com uma tela melhor. O SideDeck dá um uso para ele: conecte no cabo, escolha um visual e ele vira um painel de sensores que liga e desliga junto com o PC.
 
-## Features
+## O que ele faz
 
-- **Five panel models** — Full, Minimal, Graphs (AIDA64 style), Temperatures and Glass (iOS-style frosted glass). Preview each one before using it, on the PC or right on the phone, and switch with one click.
-- **Make it yours** — 10 color presets or your own colors, 7 fonts, sizes, spacing, units, clock on or off, and which sensors show up — arranged by dragging them on a copy of the phone screen. Each model keeps its own look.
-- **One-click phone setup** — plug the phone in and SideDeck installs its display app over the cable. A step-by-step guide is built in.
-- **Set and forget** — starts with Windows, reconnects by itself, and in *Dedicated screen* mode the phone wakes up with the PC and dims when it shuts down. Made for a phone mounted inside the case.
-- **Animated backgrounds** — use a video as the panel background or as a screensaver, with your temperatures on top. The Glass model frosts the video behind its cards.
-- **Light and private** — native app that lives in the tray, needs no admin rights and never touches the internet.
-- **English and Portuguese.**
+- **Seis modelos de painel** — Completo, Minimalista, AMOLED (preto puro), Temperaturas, Vidro (estilo iOS) e Afterburner (linhas de texto como o OSD do MSI, espelhando o seu Afterburner). Veja cada um antes de usar, no PC ou direto na tela do celular, e troque com um clique.
+- **Do seu jeito** — mais de 30 paletas prontas, as suas próprias cores ou as cores do seu RGB (importadas do [OpenRGB](https://openrgb.org)), 7 fontes, tamanhos, espaçamento, unidades, relógio ligado ou desligado, e quais sensores aparecem — organizados arrastando numa cópia da tela do celular. Cada modelo guarda o próprio visual.
+- **Celular pronto em um clique** — conecte o celular e o SideDeck instala o app do painel pelo cabo. O passo a passo está dentro do programa.
+- **Liga e esquece** — inicia com o Windows, reconecta sozinho e, no modo *Tela dedicada*, o celular acende junto com o PC e apaga quando ele desliga. Feito para um celular fixo dentro do gabinete.
+- **Fundos em vídeo ou imagem** — use um vídeo ou uma foto como fundo do painel ou como descanso de tela, com as temperaturas por cima, e escolha como ela se encaixa na tela (preencher, mostrar inteira ou esticar). O modelo Vidro deixa o fundo fosco atrás dos cartões.
+- **Avisa quando sai versão nova** — a versão aparece no rodapé da janela e, havendo uma mais nova, um botão leva direto para o download.
+- **Leve e privado** — programa nativo que fica perto do relógio, não pede administrador e não manda nada seu para lugar nenhum (a única consulta à internet é perguntar ao GitHub se existe uma versão nova).
+- **Em português e inglês.**
 
-## Panel models
+## Modelos de painel
 
-| Full | Minimal |
+| Completo | Minimalista |
 | :---: | :---: |
-| <img src="docs/images/model-full.png" alt="Full model" /> | <img src="docs/images/model-minimal.png" alt="Minimal model" /> |
-| CPU and GPU cards with a load ring and up to 4 readings each, plus RAM, network and storage. | Big rings with the sensors you pick, resized to fill the screen. Readable from across the room. |
-| **Graphs** | **Temperatures** |
-| <img src="docs/images/model-aida.png" alt="Graphs model" /> | <img src="docs/images/model-temps.png" alt="Temperatures model" /> |
-| AIDA64-style arc gauges plus a history graph for each sensor. | Just CPU and GPU temperatures: huge numbers or gradient rings. Position, caption and size are adjustable. |
-| **Glass** | |
-| <img src="docs/images/model-glass.png" alt="Glass model" /> | |
-| Frosted glass cards, iOS style, over moving colors or over your video. Light enough for entry-level phones. | |
+| <img src="docs/images/model-full.png" alt="Modelo Completo" /> | <img src="docs/images/model-minimal.png" alt="Modelo Minimalista" /> |
+| Cards de CPU e GPU com anel de uso e até 4 informações cada, mais RAM, rede e armazenamento. Desligue um card e os outros se reorganizam para ocupar o espaço. | Anéis grandes com os sensores que você escolher, redimensionados para ocupar a tela. Dá para ler de longe. |
+| **AMOLED** | **Temperaturas** |
+| <img src="docs/images/model-amoled.png" alt="Modelo AMOLED" /> | <img src="docs/images/model-temps.png" alt="Modelo Temperaturas" /> |
+| Preto puro com traços finos, feito para telas AMOLED (menos bateria e calor). | Só as temperaturas da CPU e da GPU: números enormes ou anéis com degradê. Posição, legenda e tamanho ajustáveis. |
+| **Vidro** | **Afterburner** |
+| <img src="docs/images/model-glass.png" alt="Modelo Vidro" /> | <img src="docs/images/model-osd.png" alt="Modelo Afterburner" /> |
+| Cartões de vidro fosco, estilo iOS, sobre cores em movimento ou sobre o seu fundo. Leve o bastante para celulares simples. | Linhas de texto no estilo do OSD do MSI Afterburner (CPU, GPU, RAM, FPS, frametime, 1% low). Espelha o que você marcou no Afterburner ou escolha as linhas no SideDeck, com nomes personalizados. |
 
 <p align="center">
-  <img src="docs/images/settings-models-en.png" width="720" alt="Settings window, Models tab" />
+  <img src="docs/images/settings-models-pt.png" width="720" alt="Janela de configurações, aba Modelos" />
 </p>
 
-## Requirements
+## Requisitos
 
 **PC**
 
-- Windows 10 or 11, 64-bit.
-- A free USB port (a port on the motherboard works best).
-- Microsoft Edge WebView2 — already part of Windows 11; on Windows 10 the installer downloads it if missing.
-- Port 8080 free — SideDeck serves the panel there, only to the PC itself.
+- Windows 10 ou 11, 64 bits.
+- Uma porta USB livre (de preferência da placa-mãe, atrás do gabinete).
+- Microsoft Edge WebView2 — já vem no Windows 11; no Windows 10 o instalador baixa se faltar.
+- Porta 8080 livre — é nela que o SideDeck serve o painel, só para o próprio PC.
 
-**Phone**
+**Celular**
 
-- Android 7.0 or newer.
-- A USB **data** cable (some cables only charge).
-- **USB debugging** turned on — the app walks you through it. On Xiaomi, Redmi and POCO also turn on *Install via USB* and *USB debugging (Security settings)*.
+- Android 7.0 ou mais novo.
+- Cabo USB **de dados** (alguns cabos só carregam).
+- **Depuração USB** ligada — o programa ensina como. Em Xiaomi, Redmi e POCO, ligue também *Instalar via USB* e *Depuração USB (Configurações de segurança)*.
 
-**Sensors** — what works out of the box and what needs an extra (free) program:
+**Sensores** — o que funciona direto e o que precisa de um programa extra (gratuito):
 
-| Reading | Out of the box | Needs |
+| Leitura | Direto | Precisa de |
 | --- | :---: | --- |
-| CPU load and clock, RAM, network, storage | ✅ | — |
-| GPU load, temperature, clock and memory | ✅ | — |
-| GPU fan and power | ✅ NVIDIA | AMD / Intel: [MSI Afterburner](https://www.msi.com/Landing/afterburner/graphics-cards) |
-| CPU temperature and power | — | [MSI Afterburner](https://www.msi.com/Landing/afterburner/graphics-cards) |
-| FPS in games | — | MSI Afterburner + RivaTuner Statistics Server (bundled with it) |
+| Uso e clock da CPU, RAM, rede, armazenamento | ✅ | — |
+| Uso, temperatura, clock e memória da GPU | ✅ | — |
+| Ventoinha e consumo da GPU | ✅ NVIDIA | AMD / Intel: [MSI Afterburner](https://www.msi.com/Landing/afterburner/graphics-cards) |
+| Temperatura e consumo da CPU | — | [MSI Afterburner](https://www.msi.com/Landing/afterburner/graphics-cards) |
+| FPS nos jogos | — | MSI Afterburner + RivaTuner Statistics Server (vem junto) |
 
-> Windows doesn't expose CPU temperature without a kernel driver, so SideDeck reads it from MSI Afterburner when it's running. Tested on NVIDIA; AMD and Intel GPUs use the same counters as Task Manager — feedback is welcome.
+> O Windows não informa a temperatura da CPU sem um driver de kernel, então o SideDeck lê esse valor do MSI Afterburner quando ele está aberto. Testado com NVIDIA; placas AMD e Intel usam os mesmos contadores do Gerenciador de Tarefas — relatos são bem-vindos.
 
-## Getting started
+## Primeiros passos
 
-1. **Install SideDeck** — download `SideDeck_x.y.z_x64-setup.exe` from [Releases](https://github.com/waltinho17/sidedeck/releases/latest) and run it. Windows may warn about an unknown publisher: click *More info › Run anyway*.
-2. **Prepare the phone** — turn on *Developer options* and *USB debugging*. SideDeck shows the exact steps under *First time? How to set up the phone*.
-3. **Plug it in** — tap *Allow* on the phone (check *Always allow from this computer*), then click **Install app** in SideDeck.
-4. **Pick a model** in the *Models* tab, tweak it in *Layout* and *Appearance*, and click **Save changes**. The phone updates live.
+1. **Instale o SideDeck** — baixe o `SideDeck_x.y.z_x64-setup.exe` em [Releases](https://github.com/waltinho17/sidedeck/releases/latest) e execute. O Windows pode avisar sobre editor desconhecido: clique em *Mais informações › Executar assim mesmo*.
+2. **Prepare o celular** — ligue as *Opções do desenvolvedor* e a *Depuração USB*. O SideDeck mostra o passo a passo em *Primeira vez? Como preparar o celular*.
+3. **Conecte o cabo** — toque em *Permitir* no celular (marque *Sempre permitir deste computador*) e clique em **Instalar app** no SideDeck.
+4. **Escolha um modelo** na aba *Modelos*, ajuste em *Layout* e *Aparência* e clique em **Salvar alterações**. O celular atualiza na hora.
 
 <p align="center">
-  <img src="docs/images/settings-general-en.png" width="720" alt="Settings window, General tab" />
+  <img src="docs/images/settings-general-pt.png" width="720" alt="Janela de configurações, aba Geral" />
 </p>
 
-## A phone inside your case
+## Um celular dentro do gabinete
 
-Turn on **Start SideDeck with Windows** and **Dedicated screen** in the *General* tab. From then on:
+Ligue **Iniciar o SideDeck junto com o Windows** e **Tela dedicada** na aba *Geral*. A partir daí:
 
-- the panel becomes the phone's home app and comes back if anything else opens;
-- when the PC boots, SideDeck reconnects, wakes the phone and shows the panel;
-- when the PC shuts down, the phone dims and its screen turns off.
+- o painel vira o app de início do celular e volta sozinho se outro app abrir;
+- quando o PC liga, o SideDeck reconecta, acende o celular e mostra o painel;
+- quando o PC desliga, o celular escurece e a tela apaga.
 
-The *Tips for a phone mounted inside the PC* section in the app covers the phone settings that make this reliable (authorization that never expires, no lock screen PIN, battery limits, USB power).
+A seção *Dicas para deixar um celular fixo dentro do PC*, no programa, mostra as opções do celular que deixam tudo confiável (autorização que não expira, tela de bloqueio sem PIN, limite de carga da bateria, energia do USB).
 
-## Troubleshooting
+## Problemas comuns
 
-| Problem | Try this |
+| Problema | O que fazer |
 | --- | --- |
-| Phone not detected | Use a data cable and another USB port, make sure *USB debugging* is on, and tap *Allow* on the phone. |
-| "Install failed" on Xiaomi / Redmi / POCO | Turn on *Install via USB* in Developer options, or use *Trouble installing over the cable?* to copy the APK. |
-| Phone shows "Waiting for the PC" | Check that SideDeck is running (tray icon) and click **Reconnect**. |
-| CPU temperature shows `--` | Install and run MSI Afterburner. |
-| A video won't upload | Videos can be up to 80 MB and 1920×1080, as .webm (VP9) or .mp4 (H.264). Bigger ones are too heavy for most phones. |
-| Something else | The connection log is at `%APPDATA%\SideDeck\sidedeck.log`. Please attach it when opening an issue. |
+| Celular não aparece | Use um cabo de dados e outra porta USB, confira a *Depuração USB* e toque em *Permitir* no celular. |
+| "Falha ao instalar" em Xiaomi / Redmi / POCO | Ligue *Instalar via USB* nas Opções do desenvolvedor, ou use *Problemas para instalar pelo cabo?* para copiar o APK. |
+| Celular mostra "Aguardando o PC" | Confira se o SideDeck está aberto (ícone perto do relógio) e clique em **Reconectar**. |
+| Temperatura da CPU aparece `--` | Instale e deixe aberto o MSI Afterburner. |
+| Vídeo ou imagem não entra na galeria | Vídeos: até 80 MB e 1920×1080, em .webm (VP9) ou .mp4 (H.264); imagens: até 15 MB (.jpg, .png, .webp, .gif). Vídeos maiores pesam demais para a maioria dos celulares. |
+| Outra coisa | O registro da conexão fica em `%APPDATA%\SideDeck\sidedeck.log`. Anexe esse arquivo ao abrir uma issue. |
 
-## How it works
+## Como funciona
 
 ```mermaid
 flowchart LR
-  subgraph PC["Windows PC"]
-    S["Sensors<br/>NVML · D3DKMT · PDH · MSI Afterburner"] --> H["SideDeck<br/>(Rust + Tauri)"]
-    H --> W["Local server<br/>localhost:8080"]
+  subgraph PC["PC com Windows"]
+    S["Sensores<br/>NVML · D3DKMT · PDH · MSI Afterburner"] --> H["SideDeck<br/>(Rust + Tauri)"]
+    H --> W["Servidor local<br/>localhost:8080"]
   end
-  W <-->|"USB cable<br/>adb reverse"| A
-  subgraph Phone["Android phone"]
-    A["SideDeck Display<br/>full-screen panel"]
+  W <-->|"Cabo USB<br/>adb reverse"| A
+  subgraph Celular["Celular Android"]
+    A["SideDeck Display<br/>painel em tela cheia"]
   end
 ```
 
-SideDeck reads the sensors, serves the panel on `localhost:8080` and uses `adb reverse` so the phone reaches that address through the USB cable. The phone app is a full-screen, always-on web view of the panel. Nothing leaves the two devices.
+O SideDeck lê os sensores, serve o painel em `localhost:8080` e usa o `adb reverse` para o celular chegar nesse endereço pelo cabo USB. O app do celular é uma tela cheia, sempre acesa, mostrando esse painel. Nada sai dos dois aparelhos.
 
-## Building from source
+## Compilando o código
 
-You need [Rust](https://rustup.rs) (MSVC toolchain) and [Node.js](https://nodejs.org) 18+.
+Você precisa do [Rust](https://rustup.rs) (toolchain MSVC) e do [Node.js](https://nodejs.org) 18+.
 
 ```powershell
 cd pc-monitor-host
 npm install
-npm run tauri dev      # run in development
-npm run tauri build    # installer in src-tauri/target/release/bundle/nsis/
+npm run tauri dev      # roda em modo de desenvolvimento
+npm run tauri build    # instalador em src-tauri/target/release/bundle/nsis/
 ```
 
-The phone app needs JDK 17 and the Android SDK:
+O app do celular precisa do JDK 17 e do Android SDK:
 
 ```powershell
 cd android-kiosk
-.\gradlew.bat assembleDebug   # with JAVA_HOME set to a JDK 17
+.\gradlew.bat assembleDebug   # com o JAVA_HOME apontando para um JDK 17
 copy app\build\outputs\apk\debug\app-debug.apk ..\pc-monitor-host\src-tauri\android\SideDeck-Display.apk
 ```
 
 ```
-pc-monitor-host/          Windows app (Tauri 2 + Rust)
-  src/                    Panel (index.html, main.js) and settings window (settings.*, i18n.js)
-  src-tauri/src/          Sensors, local server, adb connection supervisor
-  src-tauri/adb/          Bundled adb (Android SDK Platform-Tools)
-  src-tauri/android/      Bundled phone app (APK)
-android-kiosk/            Phone app "SideDeck Display" (Kotlin, full-screen WebView)
-branding/                 Icon sources; videos/make_videos.py generates the default backgrounds
+pc-monitor-host/          Programa do Windows (Tauri 2 + Rust)
+  src/                    Painel (index.html, main.js) e janela de configurações (settings.*, i18n.js)
+  src-tauri/src/          Sensores, servidor local, supervisor da conexão adb
+  src-tauri/adb/          adb embutido (Android SDK Platform-Tools)
+  src-tauri/android/      App do celular embutido (APK)
+android-kiosk/            App do celular "SideDeck Display" (Kotlin, WebView em tela cheia)
+branding/                 Arquivos do ícone; videos/make_videos.py gera os fundos padrão
 ```
 
-## Credits
+## Créditos
 
-Built with [Tauri](https://tauri.app). Uses `adb` from the Android SDK Platform-Tools, [NVML](https://developer.nvidia.com/nvidia-management-library-nvml) through [nvml-wrapper](https://github.com/Cldfire/nvml-wrapper), and fonts from [Google Fonts](https://fonts.google.com) ([SIL Open Font License](pc-monitor-host/src/assets/fonts/OFL.txt)). FPS, CPU temperature and CPU power come from [MSI Afterburner](https://www.msi.com/Landing/afterburner/graphics-cards) when it's installed. The default background videos (Aurora, Waves, Bokeh, Synthwave) are generated from code in `branding/videos` and ship under the same license.
+Feito com [Tauri](https://tauri.app). Usa o `adb` do Android SDK Platform-Tools, a [NVML](https://developer.nvidia.com/nvidia-management-library-nvml) via [nvml-wrapper](https://github.com/Cldfire/nvml-wrapper) e fontes do [Google Fonts](https://fonts.google.com) ([SIL Open Font License](pc-monitor-host/src/assets/fonts/OFL.txt)). FPS, temperatura e consumo da CPU vêm do [MSI Afterburner](https://www.msi.com/Landing/afterburner/graphics-cards) quando ele está instalado. Os vídeos de fundo padrão (Aurora, Ondas, Bokeh, Synthwave) são gerados por código em `branding/videos` e seguem a mesma licença.
 
-## Feedback
+## Sugestões e problemas
 
-Found a bug, or tried SideDeck on hardware not covered above (AMD or Intel GPUs, other phones)? [Open an issue](https://github.com/waltinho17/sidedeck/issues) — for connection problems, attach `%APPDATA%\SideDeck\sidedeck.log`.
+Achou um bug ou testou o SideDeck num hardware que não aparece acima (placa de vídeo AMD ou Intel, outros celulares)? [Abra uma issue](https://github.com/waltinho17/sidedeck/issues) — em problemas de conexão, anexe o `%APPDATA%\SideDeck\sidedeck.log`.
 
-## License
+## Licença
 
 [MIT](LICENSE)

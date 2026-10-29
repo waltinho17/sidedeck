@@ -8,7 +8,7 @@ use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 /// sees a different value, so a phone that kept the page open picks up new
 /// HTML/CSS/JS after an update instead of running the old code forever.
 /// Every dashboard model, in the order the settings window shows them.
-pub const MODELS: [&str; 5] = ["full", "minimal", "aida", "temps", "glass"];
+pub const MODELS: [&str; 6] = ["full", "minimal", "amoled", "temps", "glass", "osd"];
 
 pub fn server_build() -> u64 {
     static BUILD: OnceLock<u64> = OnceLock::new();
@@ -58,6 +58,14 @@ pub struct ScreensaverConfig {
     /// (0 = untouched, 0.9 = almost black).
     #[serde(default = "default_overlay_opacity")]
     pub overlay_opacity: f32,
+    /// How the picture or video fills the screen: "auto" (videos fill and
+    /// crop, pictures fit whole) | "cover" | "contain" | "fill" (stretch).
+    #[serde(default = "default_fit")]
+    pub fit: String,
+}
+
+fn default_fit() -> String {
+    "auto".into()
 }
 
 fn default_overlay_opacity() -> f32 {
@@ -78,6 +86,7 @@ impl Default for ScreensaverConfig {
             show_temps: false,
             temps_corner: default_temps_corner(),
             overlay_opacity: default_overlay_opacity(),
+            fit: default_fit(),
         }
     }
 }
@@ -197,8 +206,10 @@ pub struct DisplayConfig {
     pub temps_caption: String,
 
     // Glass model only.
-    /// Blur strength multiplier for the frosted cards (0 = clear glass).
-    #[serde(default = "default_one")]
+    /// Blur strength multiplier for the frosted cards (0 = clear glass). Any
+    /// blur over a video means copying frames to a canvas, which is what makes
+    /// weak phones stutter, so clear glass is the default.
+    #[serde(default = "default_zero")]
     pub glass_blur: f32,
     /// How milky the cards are, 0 (clear) to 1 (opaque).
     #[serde(default = "default_glass_opacity")]
@@ -207,6 +218,34 @@ pub struct DisplayConfig {
     /// background.
     #[serde(default = "default_true")]
     pub glass_animated_bg: bool,
+    /// Blur the video inside the cards (copies frames to a canvas: heavy).
+    /// Off by default so the video stays smooth.
+    #[serde(default = "default_false")]
+    pub glass_frost: bool,
+
+    // Afterburner (on-screen display) model only.
+    /// "afterburner" (mirror what Afterburner shows in its own OSD, falling
+    /// back to `osd_lines` when it isn't running) | "custom" (always
+    /// `osd_lines`).
+    #[serde(default = "default_osd_source")]
+    pub osd_source: String,
+    /// Lines of the custom layout, in order (see OSD_LINES in main.js).
+    #[serde(default = "default_osd_lines")]
+    pub osd_lines: Vec<String>,
+    /// Text size multiplier on top of the size that fits the lines to the
+    /// screen.
+    #[serde(default = "default_one")]
+    pub osd_scale: f32,
+    /// Custom text for the line labels, by key ("cpu", "gpu", "ram", "fps",
+    /// "vram", "net", "disk"); empty or missing keeps the default.
+    #[serde(default)]
+    pub osd_labels: std::collections::HashMap<String, String>,
+    /// "left" | "center" | "right"
+    #[serde(default = "default_osd_align")]
+    pub osd_align: String,
+    /// "top" | "center" | "bottom"
+    #[serde(default = "default_osd_valign")]
+    pub osd_valign: String,
 
     /// Sensor keys shown, in order. Full model: rows of the CPU and GPU cards
     /// ("temp", "clock", "power", "fan", "vram"). Minimal model: one ring per
@@ -227,6 +266,18 @@ fn default_cpu_stats() -> Vec<String> {
 }
 fn default_gpu_stats() -> Vec<String> {
     strings(&["temp", "clock", "power"])
+}
+fn default_osd_source() -> String {
+    "afterburner".into()
+}
+fn default_osd_lines() -> Vec<String> {
+    strings(&["cpu", "gpu", "ram", "fps"])
+}
+fn default_osd_align() -> String {
+    "left".into()
+}
+fn default_osd_valign() -> String {
+    "top".into()
 }
 fn default_mini_sensors() -> Vec<String> {
     strings(&["cpu_load", "ram_load", "gpu_load", "cpu_temp", "gpu_temp", "disk"])
@@ -279,6 +330,9 @@ fn default_mem_unit() -> String {
 fn default_one() -> f32 {
     1.0
 }
+fn default_zero() -> f32 {
+    0.0
+}
 fn default_corner_radius() -> u32 {
     12
 }
@@ -311,9 +365,16 @@ impl Default for DisplayConfig {
             temps_margin: 1.0,
             temps_style: default_temps_style(),
             temps_caption: default_temps_caption(),
-            glass_blur: 1.0,
+            glass_blur: default_zero(),
             glass_opacity: default_glass_opacity(),
             glass_animated_bg: true,
+            glass_frost: false,
+            osd_source: default_osd_source(),
+            osd_lines: default_osd_lines(),
+            osd_scale: 1.0,
+            osd_labels: Default::default(),
+            osd_align: default_osd_align(),
+            osd_valign: default_osd_valign(),
             cpu_stats: default_cpu_stats(),
             gpu_stats: default_gpu_stats(),
             mini_sensors: default_mini_sensors(),
@@ -337,12 +398,14 @@ pub struct ModelConfigs {
     pub full: ModelConfig,
     #[serde(default)]
     pub minimal: ModelConfig,
-    #[serde(default)]
-    pub aida: ModelConfig,
+    #[serde(default = "amoled_model")]
+    pub amoled: ModelConfig,
     #[serde(default)]
     pub temps: ModelConfig,
     #[serde(default = "glass_model")]
     pub glass: ModelConfig,
+    #[serde(default = "osd_model")]
+    pub osd: ModelConfig,
 }
 
 impl Default for ModelConfigs {
@@ -350,9 +413,10 @@ impl Default for ModelConfigs {
         Self {
             full: ModelConfig::default(),
             minimal: ModelConfig::default(),
-            aida: ModelConfig::default(),
+            amoled: amoled_model(),
             temps: ModelConfig::default(),
             glass: glass_model(),
+            osd: osd_model(),
         }
     }
 }
@@ -377,6 +441,48 @@ fn glass_model() -> ModelConfig {
     }
 }
 
+/// AMOLED panels switch black pixels off, so the model is pure black with
+/// thin, bright accents: no card fills, light type, little lit area.
+fn amoled_model() -> ModelConfig {
+    ModelConfig {
+        theme: ThemeConfig {
+            background: "#000000".into(),
+            card_background: "#000000".into(),
+            text_color: "#f2f2f2".into(),
+            muted_color: "#6f6f78".into(),
+            accent_color: "#00e0ff".into(),
+            accent_color_2: "#8b5cff".into(),
+            ..ThemeConfig::default()
+        },
+        display: DisplayConfig {
+            corner_radius: 18,
+            ..DisplayConfig::default()
+        },
+    }
+}
+
+/// Text-only overlay like MSI Afterburner's: black background, orange labels.
+fn osd_model() -> ModelConfig {
+    ModelConfig {
+        theme: ThemeConfig {
+            background: "#000000".into(),
+            card_background: "#000000".into(),
+            text_color: "#ffffff".into(),
+            muted_color: "#9a9a9a".into(),
+            accent_color: "#ff8c1a".into(),
+            accent_color_2: "#ff8c1a".into(),
+            font_family: "mono".into(),
+            ..ThemeConfig::default()
+        },
+        // No top bar: the lines are the whole screen.
+        display: DisplayConfig {
+            show_brand: false,
+            show_clock: false,
+            ..DisplayConfig::default()
+        },
+    }
+}
+
 /// User-chosen display names for the CPU and GPU. Empty means "use the name
 /// the hardware reports".
 #[derive(Serialize, Deserialize, Clone, Default)]
@@ -396,7 +502,7 @@ pub struct Settings {
     pub models: ModelConfigs,
     #[serde(default)]
     pub labels: DeviceLabels,
-    /// "full" | "minimal" | "aida" | "temps"
+    /// One of `MODELS`.
     pub dashboard_mode: String,
     /// Phone mounted as a permanent screen: the host wakes it, keeps the
     /// panel in front and makes it the home app (see adb_bridge).
@@ -415,9 +521,10 @@ impl Settings {
     fn model(&self, name: &str) -> &ModelConfig {
         match name {
             "minimal" => &self.models.minimal,
-            "aida" => &self.models.aida,
+            "amoled" => &self.models.amoled,
             "temps" => &self.models.temps,
             "glass" => &self.models.glass,
+            "osd" => &self.models.osd,
             _ => &self.models.full,
         }
     }
@@ -480,6 +587,10 @@ pub fn load() -> Settings {
     };
     migrate_to_per_model(&mut value);
     migrate_display_options(&mut value);
+    // The "Gráficos" (aida) model was replaced by AMOLED.
+    if value.get("dashboard_mode").and_then(|m| m.as_str()) == Some("aida") {
+        value["dashboard_mode"] = "amoled".into();
+    }
     serde_json::from_value(value).unwrap_or_default()
 }
 

@@ -179,26 +179,30 @@
 
           <p class="hint models-tip" data-i18n="models.tip">Dica: clique duas vezes num modelo para usar direto.</p>
           <div class="model-grid" id="model-grid">
-            <button type="button" class="model-card" data-model="full">
+            <div class="model-card" role="button" tabindex="0" data-model="full">
               <img src="assets/previews/full.png" alt="" />
               <span class="model-card-name" data-i18n="model.full">Completo</span>
-            </button>
-            <button type="button" class="model-card" data-model="minimal">
+            </div>
+            <div class="model-card" role="button" tabindex="0" data-model="minimal">
               <img src="assets/previews/minimal.png" alt="" />
               <span class="model-card-name" data-i18n="model.minimal">Minimalista</span>
-            </button>
-            <button type="button" class="model-card" data-model="aida">
-              <img src="assets/previews/aida.png" alt="" />
-              <span class="model-card-name" data-i18n="model.aida">Gráficos</span>
-            </button>
-            <button type="button" class="model-card" data-model="temps">
+            </div>
+            <div class="model-card" role="button" tabindex="0" data-model="amoled">
+              <img src="assets/previews/amoled.png" alt="" />
+              <span class="model-card-name" data-i18n="model.amoled">AMOLED</span>
+            </div>
+            <div class="model-card" role="button" tabindex="0" data-model="temps">
               <img src="assets/previews/temps.png" alt="" />
               <span class="model-card-name" data-i18n="model.temps">Temperaturas</span>
-            </button>
-            <button type="button" class="model-card" data-model="glass">
+            </div>
+            <div class="model-card" role="button" tabindex="0" data-model="glass">
               <img src="assets/previews/glass.png" alt="" />
               <span class="model-card-name" data-i18n="model.glass">Vidro</span>
-            </button>
+            </div>
+            <div class="model-card" role="button" tabindex="0" data-model="osd">
+              <img src="assets/previews/osd.png" alt="" />
+              <span class="model-card-name" data-i18n="model.osd">Afterburner</span>
+            </div>
           </div>
           <div class="block model-stage">
             <div class="model-stage-screen">
@@ -371,11 +375,18 @@
               <p class="hint" data-i18n="glass.hint">Fica ainda mais bonito com um vídeo em Vídeo › Sempre no fundo. Se o painel ficar lento num celular mais fraco, diminua o desfoque.</p>
             </div>
             <div class="field">
+              <label class="switch">
+                <input type="checkbox" id="glass-frost" />
+                <span data-i18n="glass.frost">Desfocar o vídeo dentro dos cartões (pesado)</span>
+              </label>
+            </div>
+            <div class="field">
               <label for="glass-blur" data-i18n="glass.blur">Desfoque</label>
               <div class="slider-row">
                 <input type="range" id="glass-blur" min="0" max="2" step="0.1" />
-                <span id="glass-blur-value" class="slider-value">100%</span>
+                <span id="glass-blur-value" class="slider-value">0%</span>
               </div>
+              <p class="hint" data-i18n="glass.blurHint"></p>
             </div>
             <div class="field">
               <label for="glass-opacity" data-i18n="glass.opacity">Vidro fosco</label>
@@ -460,7 +471,63 @@
             </div>
           </div>
 
-          <div data-models="full minimal aida glass" class="block">
+          <div class="block" data-models="osd">
+            <div class="block-head">
+              <h2 data-i18n="osd.title">Linhas de texto</h2>
+              <p class="hint" data-i18n="osd.hint">Texto puro, como o overlay do MSI Afterburner. Com o Afterburner aberto o painel mostra os mesmos sensores que você marcou para aparecer na tela do jogo.</p>
+            </div>
+            <div class="field">
+              <label data-i18n="osd.source">Quais linhas mostrar</label>
+              <div class="segmented compact" id="seg-osd-source">
+                <button type="button" class="seg-option" data-value="afterburner" data-i18n="osd.fromAb">Iguais ao Afterburner</button>
+                <button type="button" class="seg-option" data-value="custom" data-i18n="osd.fromHere">Escolher aqui</button>
+              </div>
+              <p class="hint" data-i18n="osd.sourceHint">Sem o Afterburner aberto, usa as linhas escolhidas abaixo.</p>
+            </div>
+            <div class="field">
+              <label data-i18n="osd.lines">Linhas escolhidas aqui</label>
+              <div class="sensor-list" id="osd-line-list"></div>
+            </div>
+            <div class="field">
+              <label data-i18n="osd.labels">Nomes das linhas</label>
+              <p class="hint" data-i18n="osd.labelsHint">Deixe em branco para usar o nome padrão.</p>
+              <div class="osd-labels">
+                <label>CPU <input type="text" class="osd-label-input" data-key="cpu" placeholder="CPU" /></label>
+                <label>GPU <input type="text" class="osd-label-input" data-key="gpu" placeholder="GPU" /></label>
+                <label>RAM <input type="text" class="osd-label-input" data-key="ram" placeholder="RAM" /></label>
+                <label>FPS <input type="text" class="osd-label-input" data-key="fps" placeholder="FPS" /></label>
+                <label>VRAM <input type="text" class="osd-label-input" data-key="vram" placeholder="VRAM" /></label>
+                <label>NET <input type="text" class="osd-label-input" data-key="net" placeholder="NET" /></label>
+                <label>DISK <input type="text" class="osd-label-input" data-key="disk" placeholder="DISK" /></label>
+              </div>
+            </div>
+            <div class="field">
+              <label for="osd-scale" data-i18n="osd.scale">Tamanho do texto</label>
+              <div class="slider-row">
+                <input type="range" id="osd-scale" min="0.3" max="1" step="0.05" />
+                <span id="osd-scale-value" class="slider-value">100%</span>
+              </div>
+              <p class="hint" data-i18n="osd.scaleHint">100% = o maior tamanho que cabe na tela.</p>
+            </div>
+            <div class="field">
+              <label data-i18n="osd.align">Posição horizontal</label>
+              <div class="segmented compact" id="seg-osd-align">
+                <button type="button" class="seg-option" data-value="left" data-i18n="pos.left">Esquerda</button>
+                <button type="button" class="seg-option" data-value="center" data-i18n="pos.center">Centro</button>
+                <button type="button" class="seg-option" data-value="right" data-i18n="pos.right">Direita</button>
+              </div>
+            </div>
+            <div class="field">
+              <label data-i18n="osd.valign">Posição vertical</label>
+              <div class="segmented compact" id="seg-osd-valign">
+                <button type="button" class="seg-option" data-value="top" data-i18n="pos.top">Em cima</button>
+                <button type="button" class="seg-option" data-value="center" data-i18n="pos.middle">No meio</button>
+                <button type="button" class="seg-option" data-value="bottom" data-i18n="pos.bottom">Embaixo</button>
+              </div>
+            </div>
+          </div>
+
+          <div data-models="full minimal amoled glass osd" class="block">
             <div class="block-head">
               <h2 data-i18n="units.title">Unidades</h2>
             </div>
@@ -473,7 +540,7 @@
               </div>
             </div>
 
-            <div data-models="full glass" class="field">
+            <div data-models="full glass osd" class="field">
               <label data-i18n="units.mem">Memória</label>
               <div class="segmented compact" id="seg-mem-unit">
                 <button type="button" class="seg-option" data-value="mb">9985 MB</button>
@@ -482,13 +549,13 @@
             </div>
           </div>
 
-          <div data-models="full minimal aida temps glass" class="block">
+          <div data-models="full minimal amoled temps glass" class="block">
             <div class="block-head">
               <h2 data-i18n="prop.title">Proporções</h2>
               <p class="hint" data-i18n="prop.hint">Espessura dos gráficos e arredondamento dos cantos.</p>
             </div>
 
-            <div data-models="full aida glass" class="field">
+            <div data-models="full amoled glass" class="field">
               <label for="bar-thickness" data-i18n="prop.bar">Espessura das barras</label>
               <div class="slider-row">
                 <input type="range" id="bar-thickness" min="0.6" max="3" step="0.1" />
@@ -496,7 +563,7 @@
               </div>
             </div>
 
-            <div data-models="full minimal aida temps glass" class="field">
+            <div data-models="full minimal amoled temps glass" class="field">
               <label for="ring-thickness" data-i18n="prop.ring">Espessura dos anéis</label>
               <div class="slider-row">
                 <input type="range" id="ring-thickness" min="0.6" max="2.5" step="0.1" />
@@ -504,7 +571,7 @@
               </div>
             </div>
 
-            <div data-models="full aida glass" class="field">
+            <div data-models="full amoled glass" class="field">
               <label for="icon-scale" data-i18n="prop.icons">Tamanho dos ícones</label>
               <div class="slider-row">
                 <input type="range" id="icon-scale" min="0.6" max="2" step="0.1" />
@@ -512,7 +579,7 @@
               </div>
             </div>
 
-            <div data-models="full minimal aida glass" class="field">
+            <div data-models="full minimal amoled glass" class="field">
               <label data-i18n="prop.corners">Cantos</label>
               <div class="segmented compact" id="seg-corner-radius">
                 <button type="button" class="seg-option" data-value="0" data-i18n="prop.square">Quadrado</button>
@@ -540,47 +607,10 @@
             <div class="block-head">
               <h2 data-i18n="presets.title">Predefinições</h2>
             </div>
-            <div class="preset-row">
-              <button type="button" class="preset-btn" data-preset="orange">
-                <span class="preset-dots"><i style="background:#ff7a1a"></i><i style="background:#111111"></i></span>
-                <span data-i18n="preset.orange">Laranja</span>
-              </button>
-              <button type="button" class="preset-btn" data-preset="pink">
-                <span class="preset-dots"><i style="background:#ff2d78"></i><i style="background:#00e0ff"></i></span>
-                <span data-i18n="preset.pink">Pink / Ciano</span>
-              </button>
-              <button type="button" class="preset-btn" data-preset="red">
-                <span class="preset-dots"><i style="background:#e6231e"></i><i style="background:#0f0f0f"></i></span>
-                <span>Raiden Red</span>
-              </button>
-              <button type="button" class="preset-btn" data-preset="purple">
-                <span class="preset-dots"><i style="background:#8b2fd9"></i><i style="background:#ff3fa4"></i></span>
-                <span data-i18n="preset.purple">Roxo / Rosa</span>
-              </button>
-              <button type="button" class="preset-btn" data-preset="green">
-                <span class="preset-dots"><i style="background:#2fe06a"></i><i style="background:#9fff5e"></i></span>
-                <span data-i18n="preset.green">Verde Neon</span>
-              </button>
-              <button type="button" class="preset-btn" data-preset="blue">
-                <span class="preset-dots"><i style="background:#2f7dff"></i><i style="background:#00d4ff"></i></span>
-                <span data-i18n="preset.blue">Azul Elétrico</span>
-              </button>
-              <button type="button" class="preset-btn" data-preset="teal">
-                <span class="preset-dots"><i style="background:#14d1c4"></i><i style="background:#4affd0"></i></span>
-                <span data-i18n="preset.teal">Turquesa</span>
-              </button>
-              <button type="button" class="preset-btn" data-preset="amber">
-                <span class="preset-dots"><i style="background:#ffb020"></i><i style="background:#ff7a1a"></i></span>
-                <span data-i18n="preset.amber">Âmbar</span>
-              </button>
-              <button type="button" class="preset-btn" data-preset="ice">
-                <span class="preset-dots"><i style="background:#7fc8ff"></i><i style="background:#c9e8ff"></i></span>
-                <span data-i18n="preset.ice">Gelo</span>
-              </button>
-              <button type="button" class="preset-btn" data-preset="mono">
-                <span class="preset-dots"><i style="background:#e4e4e4"></i><i style="background:#9a9a9a"></i></span>
-                <span data-i18n="preset.mono">Monocromático</span>
-              </button>
+            <div class="preset-row" id="preset-row"></div>
+            <div class="field rgb-import">
+              <button type="button" id="openrgb-btn" data-i18n="openrgb.btn">Usar as cores do OpenRGB</button>
+              <p class="hint" id="openrgb-status" data-i18n="openrgb.hint">Pega as cores que estão acesas agora nos seus dispositivos RGB. No OpenRGB, abra SDK Server e clique em Start Server.</p>
             </div>
           </div>
 
@@ -593,7 +623,7 @@
                 <span data-i18n="colors.bg">Fundo</span>
                 <input type="color" id="color-bg" />
               </label>
-              <label data-models="full aida" class="color-field">
+              <label data-models="full" class="color-field">
                 <span data-i18n="colors.card">Fundo do card</span>
                 <input type="color" id="color-card" />
               </label>
@@ -609,7 +639,7 @@
                 <span data-i18n="colors.accent">Destaque</span>
                 <input type="color" id="color-accent" />
               </label>
-              <label data-models="minimal temps glass" class="color-field">
+              <label data-models="minimal temps glass amoled" class="color-field">
                 <span data-i18n="colors.accent2">Destaque 2 (gradiente)</span>
                 <input type="color" id="color-accent-2" />
               </label>
@@ -627,6 +657,7 @@
               <button type="button" class="seg-option" data-value="orbitron" style="font-family:'Orbitron'">Orbitron<small>CPU 54°C</small></button>
               <button type="button" class="seg-option" data-value="exo2" style="font-family:'Exo 2'">Exo 2<small>CPU 54°C</small></button>
               <button type="button" class="seg-option" data-value="chakra" style="font-family:'Chakra Petch'">Chakra Petch<small>CPU 54°C</small></button>
+              <button type="button" class="seg-option" data-value="mono" style="font-family:Consolas, monospace">Mono<small>CPU 54°C</small></button>
               <button type="button" class="seg-option" data-value="oxanium" style="font-family:'Oxanium'">Oxanium<small>CPU 54°C</small></button>
             </div>
           </div>
@@ -660,7 +691,7 @@
             <p data-i18n="cards.sub">Escolha o que aparece no painel do celular.</p>
           </header>
 
-          <div class="block" data-models="minimal aida temps glass">
+          <div class="block" data-models="minimal amoled temps glass">
             <p class="hint" data-i18n-html="cards.onlyFull"></p>
           </div>
 
@@ -719,6 +750,19 @@
             </div>
           </div>
 
+          <div class="block" id="fit-block">
+            <div class="block-head">
+              <h2 data-i18n="fit.title">Ajuste na tela</h2>
+              <p class="hint" data-i18n="fit.hint">Como o vídeo ou a imagem ocupa a tela do celular.</p>
+            </div>
+            <div class="segmented" id="seg-bg-fit">
+              <button type="button" class="seg-option" data-value="auto" data-i18n="fit.auto">Automático</button>
+              <button type="button" class="seg-option" data-value="cover" data-i18n="fit.cover">Preencher (corta)</button>
+              <button type="button" class="seg-option" data-value="contain" data-i18n="fit.contain">Mostrar inteira</button>
+              <button type="button" class="seg-option" data-value="fill" data-i18n="fit.fill">Esticar</button>
+            </div>
+          </div>
+
           <div class="block" id="cycle-timing-block">
             <div class="block-head">
               <h2 data-i18n="video.cycleTitle">Ciclo</h2>
@@ -759,12 +803,12 @@
           <div class="block">
             <div class="block-head block-head-row">
               <div>
-                <h2 data-i18n="video.gallery">Vídeo</h2>
+                <h2 data-i18n="video.gallery">Vídeos e imagens</h2>
                 <p class="hint" data-i18n="video.galleryHint">Passe o mouse sobre um vídeo para ver ele rodando.</p>
                 <p class="hint" data-i18n="video.limits">Até 80 MB e resolução até 1920×1080 (Full HD), em .webm ou .mp4.</p>
               </div>
-              <button type="button" id="add-video-btn" data-i18n="video.add">+ Adicionar vídeo</button>
-              <input type="file" id="add-video-input" accept=".webm,.mp4,video/webm,video/mp4" multiple hidden />
+              <button type="button" id="add-video-btn" data-i18n="video.add">+ Adicionar vídeo ou imagem</button>
+              <input type="file" id="add-video-input" accept=".webm,.mp4,.jpg,.jpeg,.png,.webp,.gif,video/webm,video/mp4,image/jpeg,image/png,image/webp,image/gif" multiple hidden />
             </div>
             <div class="video-gallery" id="video-gallery"></div>
             <p class="hint" id="video-upload-status"></p>
@@ -776,6 +820,8 @@
 
     <footer class="save-bar">
       <button id="reset-btn" type="button" class="ghost-btn" data-i18n="save.reset">Restaurar padrões</button>
+      <span id="app-version" class="app-version"></span>
+      <button id="update-btn" type="button" class="ghost-btn update-btn" hidden></button>
       <span id="save-feedback"></span>
       <button id="save-btn" type="button" class="primary" data-i18n="save.save">Salvar alterações</button>
     </footer>
